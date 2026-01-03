@@ -43,12 +43,26 @@ import {
     Legend
 } from "recharts"
 
+interface Stop {
+    id: string
+    activities: Array<{
+        id: string
+        activity: {
+            id: string
+            name: string
+            cost: number
+            category?: string
+        }
+    }>
+}
+
 interface Trip {
     id: string
     name: string
     totalBudget: number
     startDate: string
     endDate: string
+    stops: Stop[]
 }
 
 interface Expense {
@@ -59,7 +73,7 @@ interface Expense {
     date?: string
 }
 
-const COLORS = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ec4899', '#eab308']
+const COLORS = ['#3b82f6', '#06b6d4', '#22c55e', '#a855f7', '#ec4899', '#eab308']
 
 const categoryIcons: Record<string, React.ReactNode> = {
     transport: <Plane className="h-5 w-5" />,
@@ -143,7 +157,17 @@ export default function BudgetPage() {
         return acc
     }, {} as Record<string, number>)
 
-    const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0)
+    // Calculate activities cost from trip stops
+    const activitiesCost = trip?.stops?.reduce((sum, stop) => 
+        sum + stop.activities.reduce((actSum, act) => actSum + (act.activity?.cost || 0), 0), 0
+    ) || 0
+    
+    // Add activities to expenses by category
+    if (activitiesCost > 0) {
+        expensesByCategory['activities'] = (expensesByCategory['activities'] || 0) + activitiesCost
+    }
+
+    const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0) + activitiesCost
     const budget = trip?.totalBudget || 3500
     const remaining = budget - totalSpent
     const percentUsed = (totalSpent / budget) * 100

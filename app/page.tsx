@@ -154,50 +154,46 @@ export default function LandingPage() {
                 </nav>
             </header>
 
-            {/* Hero Section with Video Background */}
+            {/* Hero Section with Image Background */}
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-                {/* Video Background */}
+                {/* Image Background */}
                 <div className="absolute inset-0 z-0">
-                    {/* Fallback gradient background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+                    {/* Santorini Background Image */}
+                    <Image
+                        src="/santorini-village.png"
+                        alt="Santorini Greece"
+                        fill
+                        className="object-cover"
+                        priority
+                    />
                     
-                    {/* Video element */}
-                    <video
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="absolute inset-0 w-full h-full object-cover opacity-70"
-                        poster="/paris-eiffel-tower.png"
-                    >
-                        <source src="https://cdn.coverr.co/videos/coverr-aerial-view-of-city-during-sunset-5735/1080p.mp4" type="video/mp4" />
-                    </video>
-                    
-                    {/* Cool blue overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-transparent to-cyan-900/30" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
+                    {/* Gradient overlays for text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 via-transparent to-slate-900/20" />
                 </div>
 
                 {/* Hero Content */}
-                <div className="relative z-10 container mx-auto px-4 text-center">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-cyan-200 text-sm mb-8 border border-white/20">
-                            <Sparkles className="h-4 w-4" />
-                            <span>AI-Powered Travel Planning</span>
+                <div className="relative z-10 container mx-auto px-4">
+                    <div className="max-w-3xl">
+                        {/* Trust Badge */}
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/60 backdrop-blur-md rounded-full text-white/90 text-sm mb-8 border border-white/20">
+                            <Globe className="h-4 w-4" />
+                            <span>Trusted by 500,000+ travelers worldwide</span>
                         </div>
                         
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
-                            Your Next Adventure
+                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                            <span className="italic bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                                Your Journey
+                            </span>
                             <br />
-                            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                            <span className="italic bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
                                 Starts Here
                             </span>
                         </h1>
                         
-                        <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
-                            Create personalized itineraries in minutes. Smart suggestions, budget tracking, 
-                            and seamless planning for your perfect journey.
+                        <p className="text-lg text-white/80 mb-10 max-w-xl leading-relaxed">
+                            Plan unforgettable trips with personalized itineraries, local 
+                            insights, and seamless collaboration tools.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">

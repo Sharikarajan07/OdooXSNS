@@ -49,6 +49,7 @@ interface Activity {
   name: string
   cost: number
   category?: string
+  duration?: number
 }
 
 interface StopActivity {
@@ -429,7 +430,7 @@ export default function TripDetailsPage() {
             className={viewMode === 'timeline' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'hover:bg-blue-50'}
           >
             <Clock className="h-4 w-4 mr-1" />
-            Day-wise
+            Timeline
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -438,7 +439,7 @@ export default function TripDetailsPage() {
             className={viewMode === 'list' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' : 'hover:bg-blue-50'}
           >
             <List className="h-4 w-4 mr-1" />
-            Cities
+            List
           </Button>
           <Button
             variant={viewMode === 'calendar' ? 'default' : 'ghost'}
@@ -456,96 +457,95 @@ export default function TripDetailsPage() {
         {/* Main Itinerary View */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Timeline/Day-wise View */}
+          {/* Timeline/Day-wise View - Organized by City and Day */}
           {viewMode === 'timeline' && (
             <>
               {daySchedule.length > 0 ? (
-                daySchedule.map((day) => (
-                  <Card key={day.dateStr} className="overflow-hidden border-blue-100/50 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white mb-2">
-                            Day {day.dayNumber}
-                          </Badge>
-                          <CardTitle className="text-xl text-gray-800">
-                            {day.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                          </CardTitle>
+                daySchedule.map((day) => {
+                  // Get the city for this day
+                  const cityForDay = day.activities.length > 0 ? day.activities[0].city : null
+                  
+                  return (
+                    <Card key={day.dateStr} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
+                      <div className="flex">
+                        {/* Day Number Sidebar */}
+                        <div className="w-20 md:w-24 bg-gradient-to-b from-blue-500 to-blue-600 flex flex-col items-center justify-center py-6 text-white">
+                          <span className="text-3xl md:text-4xl font-bold">{day.dayNumber}</span>
+                          <span className="text-sm text-blue-100">Day</span>
                         </div>
-                        <div className="text-right text-sm text-gray-500">
-                          {day.activities.length} {day.activities.length === 1 ? 'activity' : 'activities'}
+                        
+                        {/* Main Content */}
+                        <div className="flex-1">
+                          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <div>
+                              <h3 className="font-bold text-lg text-gray-800">
+                                {cityForDay || 'Free Day'}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-gray-500 border-gray-300">
+                              Transit
+                            </Badge>
+                          </div>
+                          
+                          <div className="p-4">
+                            {day.activities.length > 0 ? (
+                              <div className="space-y-3">
+                                {day.activities.map((item, idx) => (
+                                  <div
+                                    key={`${item.stopActivity.id}-${idx}`}
+                                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all group"
+                                  >
+                                    {/* Activity Number */}
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
+                                      {idx + 1}
+                                    </div>
+                                    
+                                    {/* Activity Details */}
+                                    <div className="flex-1">
+                                      <p className="font-medium text-gray-800">{item.stopActivity.activity.name}</p>
+                                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {item.stopActivity.activity.duration ? 
+                                            `${Math.floor(item.stopActivity.activity.duration / 60)}h ${item.stopActivity.activity.duration % 60}m` : 
+                                            '2h'
+                                          }
+                                        </span>
+                                        {item.stopActivity.activity.category && (
+                                          <Badge variant="secondary" className="text-xs">
+                                            {item.stopActivity.activity.category}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Cost */}
+                                    <div className="text-right">
+                                      <span className="font-semibold text-emerald-600">
+                                        ${item.stopActivity.activity.cost || 0}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-6 text-gray-400">
+                                <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>No activities scheduled</p>
+                                <Button variant="link" asChild className="text-blue-500">
+                                  <Link href={`/trips/${trip.id}/build`}>Add activities</Link>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      {day.activities.length > 0 ? (
-                        <div className="space-y-3">
-                          {day.activities.map((item, idx) => (
-                            <div
-                              key={`${item.stopActivity.id}-${idx}`}
-                              className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all group"
-                            >
-                              <div className="flex flex-col gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleMoveActivity(item.stopId, item.stopActivity.id, 'up')}
-                                >
-                                  <ArrowUp className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleMoveActivity(item.stopId, item.stopActivity.id, 'down')}
-                                >
-                                  <ArrowDown className="h-3 w-3" />
-                                </Button>
-                              </div>
-                              
-                              <button
-                                onClick={() => handleOpenTimePicker(item.stopId, item.stopActivity.id, item.stopActivity.startTime || null)}
-                                className="w-20 text-center py-2 px-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 hover:border-blue-300 transition-colors"
-                              >
-                                {item.stopActivity.startTime ? (
-                                  <span className="text-sm font-medium text-gray-700">{item.stopActivity.startTime}</span>
-                                ) : (
-                                  <span className="text-xs text-gray-400">Set time</span>
-                                )}
-                              </button>
-                              
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-800">{item.stopActivity.activity.name}</p>
-                                <p className="text-sm text-gray-500 flex items-center gap-1">
-                                  <MapPin className="h-3 w-3 text-blue-400" />
-                                  {item.city}, {item.country}
-                                </p>
-                              </div>
-                              
-                              <div className="text-right">
-                                <span className="font-semibold text-emerald-600">
-                                  ${item.stopActivity.activity.cost?.toFixed(2) || '0.00'}
-                                </span>
-                                {item.stopActivity.activity.category && (
-                                  <p className="text-xs text-gray-400">{item.stopActivity.activity.category}</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-400">
-                          <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>No activities scheduled</p>
-                          <Button variant="link" asChild className="text-blue-500">
-                            <Link href={`/trips/${trip.id}/build`}>Add activities</Link>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
+                    </Card>
+                  )
+                })
               ) : (
                 <Card className="border-dashed border-rose-200">
                   <CardContent className="py-12 text-center">
