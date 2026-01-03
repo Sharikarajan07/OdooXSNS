@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  avatar        String?
+  language      String    @default("en")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  trips         Trip[]
+  sharedTrips   TripShare[]
+}
+
+model Trip {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  coverImage    String?
+  startDate     DateTime
+  endDate       DateTime
+  totalBudget   Float     @default(0)
+  status        String    @default("upcoming") // ongoing, upcoming, completed, draft
+  isPublic      Boolean   @default(false)
+  shareCode     String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops         Stop[]
+  expenses      Expense[]
+  shares        TripShare[]
+}
+
+model City {
+  id            String    @id @default(cuid())
+  name          String
+  country       String
+  region        String?
+  image         String?
+  description   String?
+  costIndex     Float     @default(50) // 1-100 cost index
+  popularity    Int       @default(0)
+  latitude      Float?
+  longitude     Float?
+  
+  stops         Stop[]
+  activities    Activity[]
+}
+
+model Stop {
+  id            String    @id @default(cuid())
+  tripId        String
+  cityId        String
+  arrivalDate   DateTime
+  departureDate DateTime
+  orderIndex    Int       @default(0)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city          City      @relation(fields: [cityId], references: [id])
+  activities    StopActivity[]
+}
+
+model Activity {
+  id            String    @id @default(cuid())
+  cityId        String?
+  name          String
+  category      String    // Adventure, Food, Culture, Relaxation, etc.
+  description   String?
+  image         String?
+  cost          Float     @default(0)
+  duration      Int       @default(60) // duration in minutes
+  rating        Float     @default(4.5)
+  
+  city          City?     @relation(fields: [cityId], references: [id])
+  stopActivities StopActivity[]
+}
+
+model StopActivity {
+  id            String    @id @default(cuid())
+  stopId        String
+  activityId    String
+  startTime     DateTime?
+  orderIndex    Int       @default(0)
+  customCost    Float?
+  notes         String?
+  
+  stop          Stop      @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activity      Activity  @relation(fields: [activityId], references: [id])
+  expenses      Expense[]
+}
+
+model Expense {
+  id            String    @id @default(cuid())
+  tripId        String
+  stopActivityId String?
+  category      String    // transport, accommodation, food, activities, other
+  amount        Float
+  description   String?
+  date          DateTime  @default(now())
+  
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stopActivity  StopActivity? @relation(fields: [stopActivityId], references: [id])
+}
+
+model TripShare {
+  id              String    @id @default(cuid())
+  tripId          String
+  sharedWithId    String?
+  sharedWithEmail String?
+  permission      String    @default("view") // view, edit
+  sharedAt        DateTime  @default(now())
+  
+  trip            Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sharedWith      User?     @relation(fields: [sharedWithId], references: [id])
+}

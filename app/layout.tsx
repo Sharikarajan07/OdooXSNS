@@ -2,8 +2,9 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import "./globals.css"
+import "@/styles/globals.css"
 import { TripProvider } from "@/context/trip-context"
+import { AuthProvider } from "@/context/auth-context"
 import { Navigation } from "@/components/navigation"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -40,12 +41,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <TripProvider>
-          <Navigation />
-          <main>{children}</main>
-        </TripProvider>
+        <AuthProvider>
+          <TripProvider>
+            <Navigation />
+            <main>{children}</main>
+          </TripProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
   )
 }
+
