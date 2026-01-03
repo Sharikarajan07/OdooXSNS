@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { getTripById, addStopToTrip, getCityById, generateId, MockStop } from '@/lib/mock-data'
 
 // GET /api/stops - Get stops for a trip
 export async function GET(request: NextRequest) {
@@ -14,19 +14,8 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        const stops = await prisma.stop.findMany({
-            where: { tripId },
-            include: {
-                city: true,
-                activities: {
-                    include: {
-                        activity: true,
-                    },
-                    orderBy: { orderIndex: 'asc' },
-                },
-            },
-            orderBy: { orderIndex: 'asc' },
-        })
+        const trip = getTripById(tripId)
+        const stops = trip?.stops || []
 
         return NextResponse.json({ stops })
     } catch (error) {
@@ -51,31 +40,31 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get the next order index
-        const lastStop = await prisma.stop.findFirst({
-            where: { tripId },
-            orderBy: { orderIndex: 'desc' },
-        })
-        const orderIndex = (lastStop?.orderIndex ?? -1) + 1
+        const trip = getTripById(tripId)
+        const city = getCityById(cityId)
 
-        const stop = await prisma.stop.create({
-            data: {
-                tripId,
-                cityId,
-                arrivalDate: new Date(arrivalDate),
-                departureDate: new Date(departureDate),
-                orderIndex,
-                notes,
-            },
-            include: {
-                city: true,
-                activities: {
-                    include: {
-                        activity: true,
-                    },
-                },
-            },
-        })
+        if (!trip || !city) {
+            return NextResponse.json(
+                { error: 'Trip or city not found' },
+                { status: 404 }
+            )
+        }
+
+        const orderIndex = trip.stops.length
+
+        const stop: MockStop = {
+            id: generateId(),
+            tripId,
+            cityId,
+            arrivalDate,
+            departureDate,
+            orderIndex,
+            notes: notes || '',
+            city,
+            activities: []
+        }
+
+        addStopToTrip(tripId, stop)
 
         return NextResponse.json({ stop }, { status: 201 })
     } catch (error) {
@@ -92,14 +81,7 @@ export async function PUT(request: NextRequest) {
     try {
         const { stops } = await request.json()
 
-        // Update each stop's order
-        for (const stop of stops) {
-            await prisma.stop.update({
-                where: { id: stop.id },
-                data: { orderIndex: stop.orderIndex },
-            })
-        }
-
+        // In mock mode, just return success
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Update stops error:', error)
@@ -123,10 +105,7 @@ export async function DELETE(request: NextRequest) {
             )
         }
 
-        await prisma.stop.delete({
-            where: { id: stopId },
-        })
-
+        // In mock mode, just return success
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Delete stop error:', error)

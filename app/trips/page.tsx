@@ -88,30 +88,34 @@ export default function TripsListingPage() {
     const destinationCount = trip.stops?.length || 0
 
     return (
-      <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300">
-        <div className="relative h-40">
+      <Card className="group overflow-hidden hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 border-blue-100/50 hover:-translate-y-1">
+        <div className="relative h-44">
           <Image
             src={trip.coverImage || "/placeholder.svg"}
             alt={trip.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-blue-500/10" />
 
           <div className="absolute top-3 left-3">
             <Badge
-              variant={trip.status === 'upcoming' ? 'default' : trip.status === 'ongoing' ? 'secondary' : 'outline'}
-              className={trip.status === 'completed' ? 'bg-green-500/90 text-white' : ''}
+              className={
+                trip.status === 'upcoming' 
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-lg shadow-blue-500/30' 
+                  : trip.status === 'ongoing' 
+                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/30' 
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 shadow-lg shadow-emerald-500/30'
+              }
             >
               {trip.status}
             </Badge>
           </div>
 
-          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
             <Button
               size="icon"
-              variant="secondary"
-              className="h-8 w-8"
+              className="h-8 w-8 bg-white/90 hover:bg-white text-gray-700 hover:text-blue-600 shadow-lg"
               onClick={(e) => {
                 e.preventDefault()
                 router.push(`/trips/${trip.id}/build`)
@@ -121,8 +125,7 @@ export default function TripsListingPage() {
             </Button>
             <Button
               size="icon"
-              variant="destructive"
-              className="h-8 w-8"
+              className="h-8 w-8 bg-red-500 hover:bg-red-600 text-white shadow-lg"
               onClick={(e) => {
                 e.preventDefault()
                 setDeleteId(trip.id)
@@ -141,18 +144,18 @@ export default function TripsListingPage() {
           </div>
         </div>
 
-        <CardFooter className="p-4 flex justify-between items-center">
+        <CardFooter className="p-4 flex justify-between items-center bg-gradient-to-r from-white to-blue-50/50">
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
+            <span className="text-xs text-gray-500 flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-blue-400" />
               {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
             </span>
-            <span className="text-sm font-medium flex items-center gap-1">
-              <DollarSign className="h-3 w-3 text-green-600" />
+            <span className="text-sm font-semibold flex items-center gap-1 text-gray-700">
+              <DollarSign className="h-3 w-3 text-emerald-500" />
               ${trip.totalBudget?.toLocaleString() || 0} budget
             </span>
           </div>
-          <Button variant="ghost" size="sm" asChild className="text-primary">
+          <Button size="sm" asChild className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
             <Link href={`/trips/${trip.id}`}>
               View <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
@@ -163,13 +166,15 @@ export default function TripsListingPage() {
   }
 
   const EmptyState = ({ status }: { status: string }) => (
-    <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl">
-      <Plane className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-      <p className="text-muted-foreground mb-4">
+    <div className="col-span-full py-20 text-center border-2 border-dashed border-blue-200 rounded-xl bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
+      <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+        <Plane className="h-8 w-8 text-blue-400" />
+      </div>
+      <p className="text-gray-500 mb-4">
         No {status} trips {status === 'upcoming' ? 'planned' : ''}.
       </p>
       {status === 'upcoming' && (
-        <Button asChild>
+        <Button asChild className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30">
           <Link href="/trips/new">
             <Plus className="mr-2 h-4 w-4" />
             Start Planning
@@ -180,13 +185,13 @@ export default function TripsListingPage() {
   )
 
   return (
-    <div className="container mx-auto py-8 px-4 pb-24 md:pb-8">
+    <div className="container mx-auto py-8 px-4 pb-24 md:pb-8 bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/30 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Trips</h1>
-          <p className="text-muted-foreground">Manage all your past and future adventures.</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 bg-clip-text text-transparent">My Trips</h1>
+          <p className="text-gray-500">Manage all your past and future adventures.</p>
         </div>
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300">
           <Link href="/trips/new">
             <Plus className="mr-2 h-4 w-4" />
             New Trip
@@ -195,14 +200,14 @@ export default function TripsListingPage() {
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
-        <TabsList className="mb-8 w-full md:w-auto overflow-x-auto">
-          <TabsTrigger value="ongoing" className="px-6">
+        <TabsList className="mb-8 w-full md:w-auto overflow-x-auto bg-white/80 border border-blue-100">
+          <TabsTrigger value="ongoing" className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             Ongoing ({ongoing.length})
           </TabsTrigger>
-          <TabsTrigger value="upcoming" className="px-6">
+          <TabsTrigger value="upcoming" className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             Upcoming ({upcoming.length})
           </TabsTrigger>
-          <TabsTrigger value="completed" className="px-6">
+          <TabsTrigger value="completed" className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
             Completed ({completed.length})
           </TabsTrigger>
         </TabsList>

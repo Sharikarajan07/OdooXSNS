@@ -1,73 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { mockActivities } from '@/lib/mock-data'
 
 // GET /api/activities - Get all activities with optional filters
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
-        const query = searchParams.get('q')
+        const query = searchParams.get('q')?.toLowerCase()
         const category = searchParams.get('category')
         const cityId = searchParams.get('cityId')
         const minCost = searchParams.get('minCost')
         const maxCost = searchParams.get('maxCost')
         const sortBy = searchParams.get('sortBy') || 'rating'
 
-        const where: Record<string, unknown> = {}
+        let activities = [...mockActivities]
 
+        // Filter by query
         if (query) {
-            where.OR = [
-                { name: { contains: query } },
-                { description: { contains: query } },
-                { category: { contains: query } },
-            ]
+            activities = activities.filter(a =>
+                a.name.toLowerCase().includes(query) ||
+                a.description.toLowerCase().includes(query) ||
+                a.category.toLowerCase().includes(query)
+            )
         }
 
-        if (category) {
-            where.category = category
+        // Filter by category
+        if (category && category !== 'all') {
+            activities = activities.filter(a => a.category === category)
         }
 
+        // Filter by city
         if (cityId) {
-            where.cityId = cityId
+            activities = activities.filter(a => a.cityId === cityId)
         }
 
-        if (minCost || maxCost) {
-            where.cost = {}
-            if (minCost) {
-                (where.cost as Record<string, number>).gte = parseFloat(minCost)
-            }
-            if (maxCost) {
-                (where.cost as Record<string, number>).lte = parseFloat(maxCost)
-            }
+        // Filter by cost
+        if (minCost) {
+            activities = activities.filter(a => a.cost >= parseFloat(minCost))
+        }
+        if (maxCost) {
+            activities = activities.filter(a => a.cost <= parseFloat(maxCost))
         }
 
-        const orderBy: Record<string, string> = {}
+        // Sort
         if (sortBy === 'rating') {
-            orderBy.rating = 'desc'
+            activities.sort((a, b) => b.rating - a.rating)
         } else if (sortBy === 'cost') {
-            orderBy.cost = 'asc'
+            activities.sort((a, b) => a.cost - b.cost)
         } else if (sortBy === 'duration') {
-            orderBy.duration = 'asc'
+            activities.sort((a, b) => a.duration - b.duration)
         } else if (sortBy === 'name') {
-            orderBy.name = 'asc'
+            activities.sort((a, b) => a.name.localeCompare(b.name))
         }
-
-        const activities = await prisma.activity.findMany({
-            where,
-            orderBy,
-            include: {
-                city: true,
-            },
-        })
 
         // Get unique categories for filtering
-        const categories = await prisma.activity.findMany({
-            select: { category: true },
-            distinct: ['category'],
-        })
+        const categories = [...new Set(mockActivities.map(a => a.category))]
 
         return NextResponse.json({
             activities,
-            categories: categories.map(c => c.category),
+            categories,
         })
     } catch (error) {
         console.error('Get activities error:', error)

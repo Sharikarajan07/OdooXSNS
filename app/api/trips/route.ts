@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 import * as jwt from 'jsonwebtoken'
+import { getTrips, addTrip, generateId, MockTrip, mockUsers } from '@/lib/mock-data'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter-secret-key-2026'
 
@@ -24,31 +24,18 @@ export async function GET(request: NextRequest) {
     try {
         const user = getUserFromToken(request)
 
-        // For demo purposes, if no auth, return demo user's trips
-        const userId = user?.userId || (await prisma.user.findFirst())?.id
+        // For demo purposes, return all trips from mock data
+        const userId = user?.userId || mockUsers[0]?.id || 'user-1'
 
-        if (!userId) {
-            return NextResponse.json({ trips: [] })
-        }
+        const allTrips = getTrips()
+        const userTrips = allTrips.filter(t => t.userId === userId || userId === 'user-1' || userId === 'demo-user')
 
-        const trips = await prisma.trip.findMany({
-            where: { userId },
-            include: {
-                stops: {
-                    include: {
-                        city: true,
-                        activities: {
-                            include: {
-                                activity: true,
-                            },
-                        },
-                    },
-                    orderBy: { orderIndex: 'asc' },
-                },
-                expenses: true,
-            },
-            orderBy: { startDate: 'asc' },
-        })
+        // Transform to match expected format
+        const trips = userTrips.map(trip => ({
+            ...trip,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+        }))
 
         return NextResponse.json({ trips })
     } catch (error) {
@@ -64,14 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const user = getUserFromToken(request)
-        const userId = user?.userId || (await prisma.user.findFirst())?.id
-
-        if (!userId) {
-            return NextResponse.json(
-                { error: 'User not found' },
-                { status: 401 }
-            )
-        }
+        const userId = user?.userId || 'user-1'
 
         const data = await request.json()
         const { name, description, startDate, endDate, totalBudget, coverImage, destination } = data
@@ -86,28 +66,25 @@ export async function POST(request: NextRequest) {
         // Generate a share code
         const shareCode = Math.random().toString(36).substring(2, 10).toUpperCase()
 
-        const trip = await prisma.trip.create({
-            data: {
-                userId,
-                name,
-                description: description || destination || '',
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
-                totalBudget: totalBudget || 0,
-                coverImage,
-                shareCode,
-                status: 'upcoming',
-            },
-            include: {
-                stops: {
-                    include: {
-                        city: true,
-                    },
-                },
-            },
-        })
+        const newTrip: MockTrip = {
+            id: generateId(),
+            userId,
+            name,
+            description: description || destination || '',
+            coverImage: coverImage || '/beautiful-travel-destination-landscape.jpg',
+            startDate,
+            endDate,
+            totalBudget: totalBudget || 0,
+            status: 'upcoming',
+            isPublic: false,
+            shareCode,
+            stops: [],
+            expenses: []
+        }
 
-        return NextResponse.json({ trip }, { status: 201 })
+        addTrip(newTrip)
+
+        return NextResponse.json({ trip: newTrip }, { status: 201 })
     } catch (error) {
         console.error('Create trip error:', error)
         return NextResponse.json(

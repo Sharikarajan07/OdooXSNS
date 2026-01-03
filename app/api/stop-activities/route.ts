@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { getTrips, getActivityById, addActivityToStop, generateId, MockStopActivity } from '@/lib/mock-data'
 
 // GET /api/stop-activities - Get activities for a stop
 export async function GET(request: NextRequest) {
@@ -14,13 +14,16 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        const activities = await prisma.stopActivity.findMany({
-            where: { stopId },
-            include: {
-                activity: true,
-            },
-            orderBy: { orderIndex: 'asc' },
-        })
+        // Find the stop across all trips
+        const allTrips = getTrips()
+        let activities: MockStopActivity[] = []
+        for (const trip of allTrips) {
+            const stop = trip.stops.find(s => s.id === stopId)
+            if (stop) {
+                activities = stop.activities
+                break
+            }
+        }
 
         return NextResponse.json({ activities })
     } catch (error) {
@@ -45,25 +48,24 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get the next order index
-        const lastActivity = await prisma.stopActivity.findFirst({
-            where: { stopId },
-            orderBy: { orderIndex: 'desc' },
-        })
-        const orderIndex = (lastActivity?.orderIndex ?? -1) + 1
+        const activity = getActivityById(activityId)
+        if (!activity) {
+            return NextResponse.json(
+                { error: 'Activity not found' },
+                { status: 404 }
+            )
+        }
 
-        const stopActivity = await prisma.stopActivity.create({
-            data: {
-                stopId,
-                activityId,
-                startTime: startTime ? new Date(startTime) : null,
-                orderIndex,
-                notes,
-            },
-            include: {
-                activity: true,
-            },
-        })
+        const stopActivity: MockStopActivity = {
+            id: generateId(),
+            stopId,
+            activityId,
+            startTime: startTime || null,
+            orderIndex: 0,
+            activity
+        }
+
+        addActivityToStop(stopId, stopActivity)
 
         return NextResponse.json({ stopActivity }, { status: 201 })
     } catch (error) {
@@ -88,10 +90,7 @@ export async function DELETE(request: NextRequest) {
             )
         }
 
-        await prisma.stopActivity.delete({
-            where: { id },
-        })
-
+        // In mock mode, just return success
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Delete stop activity error:', error)
@@ -107,13 +106,7 @@ export async function PUT(request: NextRequest) {
     try {
         const { activities } = await request.json()
 
-        for (const activity of activities) {
-            await prisma.stopActivity.update({
-                where: { id: activity.id },
-                data: { orderIndex: activity.orderIndex },
-            })
-        }
-
+        // In mock mode, just return success
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Update stop activities error:', error)

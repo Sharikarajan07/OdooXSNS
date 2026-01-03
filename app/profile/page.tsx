@@ -68,8 +68,8 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-4xl">
-            <Button variant="ghost" asChild className="mb-6">
+        <div className="container mx-auto py-8 px-4 max-w-4xl bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/30 min-h-screen pb-24 md:pb-8">
+            <Button variant="ghost" asChild className="mb-6 hover:bg-blue-50 hover:text-blue-600">
                 <Link href="/dashboard">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
@@ -78,41 +78,43 @@ export default function ProfilePage() {
 
             <div className="space-y-8">
                 {/* Profile Header */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-2xl">Profile Settings</CardTitle>
+                <Card className="border-blue-100/50 shadow-xl shadow-blue-500/5">
+                    <CardHeader className="bg-gradient-to-r from-blue-50/50 to-cyan-50/50">
+                        <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 bg-clip-text text-transparent">Profile Settings</CardTitle>
                         <CardDescription>
                             Manage your account information and preferences
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 pt-6">
                         {/* Avatar Section */}
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                <Avatar className="h-24 w-24 border-4 border-primary/20">
+                                <Avatar className="h-24 w-24 ring-4 ring-blue-200 ring-offset-2">
                                     <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} />
-                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                                    <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
                                         {name.split(' ').map(n => n[0]).join('')}
                                     </AvatarFallback>
                                 </Avatar>
-                                <button className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors">
+                                <button className="absolute bottom-0 right-0 p-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300">
                                     <Camera className="h-4 w-4" />
                                 </button>
                             </div>
                             <div>
-                                <h3 className="text-xl font-semibold">{name}</h3>
-                                <p className="text-muted-foreground">{email}</p>
-                                <p className="text-sm text-muted-foreground mt-1">Member since January 2026</p>
+                                <h3 className="text-xl font-semibold text-gray-800">{name}</h3>
+                                <p className="text-gray-500">{email}</p>
+                                <p className="text-sm text-gray-400 mt-1">Member since January 2026</p>
                             </div>
                         </div>
 
-                        <Separator />
+                        <Separator className="bg-blue-100" />
 
                         {/* Personal Information */}
                         <div className="space-y-4">
                             <h4 className="text-lg font-semibold flex items-center gap-2">
-                                <User className="h-5 w-5 text-primary" />
-                                Personal Information
+                                <div className="p-1.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                                    <User className="h-4 w-4 text-white" />
+                                </div>
+                                <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Personal Information</span>
                             </h4>
 
                             <div className="grid gap-4 md:grid-cols-2">
@@ -123,17 +125,18 @@ export default function ProfilePage() {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="Your name"
+                                        className="border-blue-100 focus:border-blue-300 focus:ring-blue-500/20"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="email">Email Address</Label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-400" />
                                         <Input
                                             id="email"
                                             type="email"
-                                            className="pl-10"
+                                            className="pl-10 border-blue-100 focus:border-blue-300 focus:ring-blue-500/20"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="your@email.com"
@@ -143,20 +146,22 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <Separator />
+                        <Separator className="bg-blue-100" />
 
                         {/* Preferences */}
                         <div className="space-y-4">
                             <h4 className="text-lg font-semibold flex items-center gap-2">
-                                <Globe className="h-5 w-5 text-primary" />
-                                Preferences
+                                <div className="p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
+                                    <Globe className="h-4 w-4 text-white" />
+                                </div>
+                                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Preferences</span>
                             </h4>
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="language">Language</Label>
                                     <Select value={language} onValueChange={setLanguage}>
-                                        <SelectTrigger>
+                                        <SelectTrigger className="border-rose-100">
                                             <SelectValue placeholder="Select language" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -172,7 +177,7 @@ export default function ProfilePage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="currency">Currency</Label>
                                     <Select defaultValue="usd">
-                                        <SelectTrigger>
+                                        <SelectTrigger className="border-rose-100">
                                             <SelectValue placeholder="Select currency" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -186,12 +191,14 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border border-blue-100">
                                 <div className="flex items-center gap-3">
-                                    <Bell className="h-5 w-5 text-primary" />
+                                    <div className="p-2 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg">
+                                        <Bell className="h-4 w-4 text-white" />
+                                    </div>
                                     <div>
-                                        <p className="font-medium">Email Notifications</p>
-                                        <p className="text-sm text-muted-foreground">Receive trip reminders and updates</p>
+                                        <p className="font-medium text-gray-700">Email Notifications</p>
+                                        <p className="text-sm text-gray-500">Receive trip reminders and updates</p>
                                     </div>
                                 </div>
                                 <Switch
@@ -200,12 +207,14 @@ export default function ProfilePage() {
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border border-blue-100">
                                 <div className="flex items-center gap-3">
-                                    <Shield className="h-5 w-5 text-primary" />
+                                    <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg">
+                                        <Shield className="h-4 w-4 text-white" />
+                                    </div>
                                     <div>
-                                        <p className="font-medium">Public Profile</p>
-                                        <p className="text-sm text-muted-foreground">Allow others to see your trips</p>
+                                        <p className="font-medium text-gray-700">Public Profile</p>
+                                        <p className="text-sm text-gray-500">Allow others to see your trips</p>
                                     </div>
                                 </div>
                                 <Switch
@@ -215,8 +224,8 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter>
-                        <Button onClick={handleSave} disabled={isSaving} className="ml-auto">
+                    <CardFooter className="bg-gradient-to-r from-blue-50/30 to-cyan-50/30">
+                        <Button onClick={handleSave} disabled={isSaving} className="ml-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30">
                             {isSaving ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -233,26 +242,28 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Saved Destinations */}
-                <Card>
-                    <CardHeader>
+                <Card className="border-blue-100/50 shadow-lg shadow-blue-500/5">
+                    <CardHeader className="bg-gradient-to-r from-blue-50/50 to-cyan-50/50">
                         <CardTitle className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5 text-primary" />
-                            Saved Destinations
+                            <div className="p-1.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                                <MapPin className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Saved Destinations</span>
                         </CardTitle>
                         <CardDescription>
                             Places you've saved for future trips
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-4">
                         <div className="grid gap-4 sm:grid-cols-3">
                             {savedDestinations.map((dest) => (
                                 <div
                                     key={dest.id}
-                                    className="group relative h-32 rounded-lg overflow-hidden cursor-pointer"
+                                    className="group relative h-32 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-blue-500/10 z-10" />
                                     <div
-                                        className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-300"
+                                        className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700"
                                         style={{ backgroundImage: `url(${dest.image})` }}
                                     />
                                     <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
@@ -265,9 +276,9 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Danger Zone */}
-                <Card className="border-destructive/50">
+                <Card className="border-rose-200 bg-rose-50/30">
                     <CardHeader>
-                        <CardTitle className="text-destructive flex items-center gap-2">
+                        <CardTitle className="text-rose-600 flex items-center gap-2">
                             <Trash2 className="h-5 w-5" />
                             Danger Zone
                         </CardTitle>
@@ -276,26 +287,26 @@ export default function ProfilePage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+                        <div className="flex items-center justify-between p-4 rounded-lg border border-rose-300 bg-rose-50">
                             <div>
-                                <p className="font-medium">Delete Account</p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="font-medium text-rose-700">Delete Account</p>
+                                <p className="text-sm text-rose-500">
                                     Permanently delete your account and all data
                                 </p>
                             </div>
-                            <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
+                            <Button className="bg-rose-600 hover:bg-rose-700 text-white" size="sm" onClick={handleDeleteAccount}>
                                 Delete Account
                             </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
+                        <div className="flex items-center justify-between p-4 rounded-lg border border-rose-100 bg-white">
                             <div>
-                                <p className="font-medium">Sign Out</p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="font-medium text-gray-700">Sign Out</p>
+                                <p className="text-sm text-gray-500">
                                     Sign out of your account on this device
                                 </p>
                             </div>
-                            <Button variant="outline" size="sm" onClick={handleLogout}>
+                            <Button variant="outline" size="sm" onClick={handleLogout} className="border-rose-200 hover:bg-rose-50 hover:text-rose-600">
                                 <LogOut className="mr-2 h-4 w-4" />
                                 Sign Out
                             </Button>

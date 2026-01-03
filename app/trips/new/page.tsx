@@ -118,8 +118,8 @@ export default function NewTripPage() {
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl pb-24 md:pb-8">
-      <Button variant="ghost" asChild className="mb-6">
+    <div className="container mx-auto py-8 px-4 max-w-4xl pb-24 md:pb-8 bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/30 min-h-screen">
+      <Button variant="ghost" asChild className="mb-6 hover:bg-blue-50 hover:text-blue-600">
         <Link href="/trips">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Trips
@@ -128,12 +128,12 @@ export default function NewTripPage() {
 
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
-          <div className="p-4 bg-primary/10 rounded-2xl">
-            <Plane className="h-10 w-10 text-primary" />
+          <div className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-xl shadow-blue-500/30">
+            <Plane className="h-10 w-10 text-white" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold mb-2">Plan a New Trip</h1>
-        <p className="text-muted-foreground max-w-lg mx-auto">
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 bg-clip-text text-transparent">Plan a New Trip</h1>
+        <p className="text-gray-500 max-w-lg mx-auto">
           Start planning your next adventure! Fill in the details below to create your personalized itinerary.
         </p>
       </div>
@@ -141,11 +141,13 @@ export default function NewTripPage() {
       <form onSubmit={handleSubmit}>
         <div className="space-y-8">
           {/* Basic Info */}
-          <Card>
+          <Card className="border-blue-100/50 shadow-lg shadow-blue-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Trip Details
+                <div className="p-1.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Trip Details</span>
               </CardTitle>
               <CardDescription>
                 Give your trip a name and description
@@ -160,6 +162,7 @@ export default function NewTripPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  className="border-blue-100 focus:border-blue-300 focus:ring-blue-500/20"
                 />
               </div>
 
@@ -171,17 +174,20 @@ export default function NewTripPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
+                  className="border-blue-100 focus:border-blue-300 focus:ring-blue-500/20"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Dates and Budget */}
-          <Card>
+          <Card className="border-blue-100/50 shadow-lg shadow-blue-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                Dates & Budget
+                <div className="p-1.5 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg">
+                  <Calendar className="h-4 w-4 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">Dates & Budget</span>
               </CardTitle>
               <CardDescription>
                 When are you traveling and what's your budget?
@@ -233,12 +239,12 @@ export default function NewTripPage() {
               </div>
 
               {startDate && endDate && (
-                <div className="p-4 rounded-lg bg-muted/50">
+                <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100">
                   <p className="text-sm">
-                    <span className="font-medium">Trip Duration:</span>{' '}
+                    <span className="font-medium text-blue-600">Trip Duration:</span>{' '}
                     {Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24))} days
                     {budget && (
-                      <span className="text-muted-foreground">
+                      <span className="text-gray-500">
                         {' '}• ~${(parseFloat(budget) / Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(0)}/day
                       </span>
                     )}
@@ -249,11 +255,13 @@ export default function NewTripPage() {
           </Card>
 
           {/* Destinations */}
-          <Card>
+          <Card className="border-blue-100/50 shadow-lg shadow-blue-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                Destinations
+                <div className="p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
+                  <MapPin className="h-4 w-4 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Destinations</span>
               </CardTitle>
               <CardDescription>
                 Select cities you plan to visit (you can add more later)
@@ -268,16 +276,16 @@ export default function NewTripPage() {
                       key={city.id}
                       type="button"
                       className={`
-                        relative p-3 rounded-lg border-2 text-left transition-all
+                        relative p-3 rounded-lg border-2 text-left transition-all duration-300 hover:shadow-lg
                         ${isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-blue-500/20'
+                          : 'border-blue-100 hover:border-blue-300 hover:bg-blue-50/50'
                         }
                       `}
                       onClick={() => toggleCity(city.id)}
                     >
                       {isSelected && (
-                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full p-1 shadow-md">
                           <Check className="h-3 w-3" />
                         </div>
                       )}
@@ -298,11 +306,11 @@ export default function NewTripPage() {
 
               {selectedCities.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="text-sm text-muted-foreground">Selected:</span>
+                  <span className="text-sm text-gray-500">Selected:</span>
                   {selectedCities.map(id => {
                     const city = cities.find(c => c.id === id)
                     return city ? (
-                      <Badge key={id} variant="secondary">
+                      <Badge key={id} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
                         {city.name}
                       </Badge>
                     ) : null
@@ -313,11 +321,13 @@ export default function NewTripPage() {
           </Card>
 
           {/* Cover Image */}
-          <Card>
+          <Card className="border-blue-100/50 shadow-lg shadow-blue-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-primary" />
-                Cover Image
+                <div className="p-1.5 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg">
+                  <ImageIcon className="h-4 w-4 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">Cover Image</span>
               </CardTitle>
               <CardDescription>
                 Choose a cover image for your trip
@@ -330,8 +340,8 @@ export default function NewTripPage() {
                     key={idx}
                     type="button"
                     className={`
-                      relative aspect-video rounded-lg overflow-hidden border-2 transition-all
-                      ${coverImage === img ? 'border-primary ring-2 ring-primary/20' : 'border-border'}
+                      relative aspect-video rounded-lg overflow-hidden border-2 transition-all duration-300
+                      ${coverImage === img ? 'border-blue-400 ring-2 ring-blue-400/30 shadow-lg' : 'border-blue-100 hover:border-blue-300'}
                     `}
                     onClick={() => setCoverImage(img)}
                   >
@@ -342,7 +352,7 @@ export default function NewTripPage() {
                       className="object-cover"
                     />
                     {coverImage === img && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 flex items-center justify-center">
                         <Check className="h-6 w-6 text-white drop-shadow-lg" />
                       </div>
                     )}
@@ -353,16 +363,16 @@ export default function NewTripPage() {
           </Card>
 
           {/* Submit */}
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+          <Card className="bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-teal-500/10 border-blue-200 shadow-xl shadow-blue-500/10">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-lg">Ready to start planning?</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold text-lg bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Ready to start planning?</h3>
+                  <p className="text-sm text-gray-500">
                     You can add details and activities after creating your trip
                   </p>
                 </div>
-                <Button type="submit" size="lg" disabled={isLoading} className="shrink-0">
+                <Button type="submit" size="lg" disabled={isLoading} className="shrink-0 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all duration-300">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

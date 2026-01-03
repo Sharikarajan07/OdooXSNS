@@ -90,79 +90,114 @@ export default function DashboardPage() {
 
     return (
         <div className="container mx-auto py-8 px-4 pb-24 md:pb-8">
-            {/* Hero Section */}
-            <section className="relative h-64 md:h-80 rounded-2xl overflow-hidden mb-8 shadow-xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/60 z-10" />
-                <div className="absolute inset-0 bg-[url('/beautiful-travel-destination-landscape.jpg')] bg-cover bg-center" />
-                <div className="relative z-20 h-full flex flex-col items-center justify-center text-center text-white p-6">
-                    <h1 className="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-                        Where to next? ✈️
+            {/* Hero Section - Stunning Travel Destination */}
+            <section className="relative h-80 md:h-[420px] rounded-3xl overflow-hidden mb-8 shadow-2xl">
+                {/* Background Image - Beautiful Santorini sunset view */}
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1920&q=80')] bg-cover bg-center" />
+                
+                {/* Warm overlay gradients */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-800/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+                
+                {/* Content */}
+                <div className="relative z-20 h-full flex flex-col justify-center p-8 md:p-12">
+                    {/* Trust badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white/90 text-sm mb-6 w-fit border border-white/20">
+                        <Globe className="h-4 w-4" />
+                        <span>Trusted by 500,000+ travelers worldwide</span>
+                    </div>
+                    
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+                        <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Your Journey Starts Here</span>
                     </h1>
-                    <p className="text-lg md:text-xl mb-6 max-w-2xl drop-shadow-md opacity-90">
-                        Plan your personalized itinerary and track your budget for the ultimate travel experience.
+                    
+                    <p className="text-lg md:text-xl text-white/90 mb-8 max-w-xl drop-shadow-md">
+                        Plan unforgettable trips with personalized itineraries, local insights, and seamless collaboration tools.
                     </p>
-                    <Button size="lg" asChild className="rounded-full px-8 shadow-lg bg-white text-primary hover:bg-white/90">
-                        <Link href="/trips/new">
-                            <Plus className="mr-2 h-5 w-5" />
-                            Plan a New Trip
-                        </Link>
-                    </Button>
+                    
+                    <div className="flex flex-wrap gap-4 mb-8">
+                        <Button size="lg" asChild className="rounded-full px-8 py-6 shadow-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold text-lg transition-transform hover:scale-105">
+                            <Link href="/trips/new">
+                                <Plus className="mr-2 h-5 w-5" />
+                                Plan New Trip
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+                
+                {/* Stats badges - bottom right */}
+                <div className="absolute bottom-6 right-6 md:bottom-8 md:right-8 flex items-center gap-3 z-20">
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/20">
+                        <p className="text-2xl font-bold text-white">190+</p>
+                        <p className="text-xs text-white/70">Countries</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/20">
+                        <p className="text-2xl font-bold text-white">50K+</p>
+                        <p className="text-xs text-white/70">Destinations</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/20 flex items-center gap-2">
+                        <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                        <div>
+                            <p className="text-2xl font-bold text-white">4.9</p>
+                            <p className="text-xs text-white/70">Rating</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            {/* Quick Stats */}
+            {/* Quick Stats with Blue Gradient Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+                <Card className="bg-gradient-to-br from-cyan-500 to-blue-600 border-0 text-white shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/20 rounded-lg">
-                                <Plane className="h-5 w-5 text-blue-600" />
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <Plane className="h-5 w-5 text-white" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">{trips.length}</p>
-                                <p className="text-sm text-muted-foreground">Total Trips</p>
+                                <p className="text-sm text-white/80">Total Trips</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+                <Card className="bg-gradient-to-br from-emerald-500 to-teal-500 border-0 text-white shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-500/20 rounded-lg">
-                                <DollarSign className="h-5 w-5 text-green-600" />
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <DollarSign className="h-5 w-5 text-white" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">${totalBudget.toLocaleString()}</p>
-                                <p className="text-sm text-muted-foreground">Total Budget</p>
+                                <p className="text-sm text-white/80">Total Budget</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+                <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-orange-500/20 rounded-lg">
-                                <MapPin className="h-5 w-5 text-orange-600" />
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <MapPin className="h-5 w-5 text-white" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">{cities.length}</p>
-                                <p className="text-sm text-muted-foreground">Destinations</p>
+                                <p className="text-sm text-white/80">Destinations</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+                <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-0 text-white shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-purple-500/20 rounded-lg">
-                                <TrendingUp className="h-5 w-5 text-purple-600" />
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <TrendingUp className="h-5 w-5 text-white" />
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">{upcomingTrips.length}</p>
-                                <p className="text-sm text-muted-foreground">Upcoming</p>
+                                <p className="text-sm text-white/80">Upcoming</p>
                             </div>
                         </div>
                     </CardContent>
@@ -244,23 +279,25 @@ export default function DashboardPage() {
                 {/* Top Regional Selections */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                            <Globe className="h-6 w-6 text-primary" />
-                            Top Destinations
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg shadow-blue-500/25">
+                                <Globe className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Top Destinations</span>
                         </h2>
-                        <Link href="/search/cities" className="text-sm text-primary hover:underline font-medium">
-                            See all
+                        <Link href="/search/cities" className="text-sm text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 hover:gap-2 transition-all duration-300">
+                            See all <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
 
                     {isLoading ? (
                         <div className="grid sm:grid-cols-2 gap-4">
                             {[...Array(4)].map((_, i) => (
-                                <Card key={i}>
-                                    <Skeleton className="h-48 w-full" />
+                                <Card key={i} className="border-blue-100">
+                                    <Skeleton className="h-48 w-full bg-blue-50" />
                                     <CardContent className="p-4">
-                                        <Skeleton className="h-5 w-3/4 mb-2" />
-                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-5 w-3/4 mb-2 bg-blue-50" />
+                                        <Skeleton className="h-4 w-full bg-blue-50" />
                                     </CardContent>
                                 </Card>
                             ))}
@@ -268,36 +305,42 @@ export default function DashboardPage() {
                     ) : (
                         <div className="grid sm:grid-cols-2 gap-4">
                             {cities.slice(0, 4).map((city) => (
-                                <Card key={city.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
-                                    <div className="relative h-48 bg-muted">
+                                <Card key={city.id} className="group overflow-hidden hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 border-blue-100/50 hover:-translate-y-1">
+                                    <div className="relative h-52 bg-blue-50">
                                         {city.image && (
-                                            <div className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-500" style={{ backgroundImage: `url(${city.image})` }} />
+                                            <div className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700" style={{ backgroundImage: `url(${city.image})` }} />
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-blue-500/10" />
 
                                         <div className="absolute top-3 right-3">
-                                            <Badge className="bg-white/90 text-foreground">
-                                                <TrendingUp className="h-3 w-3 mr-1" />
+                                            <Badge className="bg-white/95 text-gray-700 border-0 shadow-lg">
+                                                <TrendingUp className="h-3 w-3 mr-1 text-blue-500" />
                                                 {city.popularity}%
                                             </Badge>
                                         </div>
 
                                         <div className="absolute bottom-0 left-0 right-0 p-4">
-                                            <h3 className="text-white font-bold text-xl mb-1">{city.name}</h3>
-                                            <p className="text-white/80 text-sm flex items-center gap-1">
+                                            <h3 className="text-white font-bold text-xl mb-1 drop-shadow-lg">{city.name}</h3>
+                                            <p className="text-white/90 text-sm flex items-center gap-1">
                                                 <MapPin className="h-3 w-3" />
                                                 {city.country}
                                             </p>
                                         </div>
                                     </div>
-                                    <CardContent className="p-4">
-                                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{city.description}</p>
+                                    <CardContent className="p-4 bg-gradient-to-r from-white to-blue-50/30">
+                                        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{city.description}</p>
                                         <div className="flex items-center justify-between">
-                                            <Badge variant="outline" className="text-xs">
+                                            <Badge className={`text-xs border-0 ${
+                                                city.costIndex < 40 
+                                                    ? 'bg-emerald-100 text-emerald-700' 
+                                                    : city.costIndex < 70 
+                                                        ? 'bg-amber-100 text-amber-700' 
+                                                        : 'bg-purple-100 text-purple-700'
+                                            }`}>
                                                 <DollarSign className="h-3 w-3 mr-1" />
-                                                {city.costIndex < 40 ? 'Budget' : city.costIndex < 70 ? 'Moderate' : 'Expensive'}
+                                                {city.costIndex < 40 ? 'Budget' : city.costIndex < 70 ? 'Moderate' : 'Premium'}
                                             </Badge>
-                                            <Button variant="ghost" size="sm" asChild className="text-primary">
+                                            <Button size="sm" asChild className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md">
                                                 <Link href={`/search/cities`}>
                                                     Explore <ArrowRight className="ml-1 h-3 w-3" />
                                                 </Link>
@@ -314,23 +357,25 @@ export default function DashboardPage() {
             {/* Suggestions Section */}
             <section className="mt-12">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Star className="h-6 w-6 text-yellow-500" />
-                        Suggested Activities
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25">
+                            <Star className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent">Suggested Activities</span>
                     </h2>
-                    <Link href="/search" className="text-sm text-primary hover:underline font-medium">
-                        Browse all
+                    <Link href="/search" className="text-sm text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 hover:gap-2 transition-all duration-300">
+                        Browse all <ArrowRight className="h-3 w-3" />
                     </Link>
                 </div>
 
                 {isLoading ? (
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[...Array(4)].map((_, i) => (
-                            <Card key={i}>
-                                <Skeleton className="h-32 w-full" />
+                            <Card key={i} className="border-blue-100">
+                                <Skeleton className="h-32 w-full bg-blue-50" />
                                 <CardContent className="p-4">
-                                    <Skeleton className="h-4 w-3/4 mb-2" />
-                                    <Skeleton className="h-3 w-1/2" />
+                                    <Skeleton className="h-4 w-3/4 mb-2 bg-blue-50" />
+                                    <Skeleton className="h-3 w-1/2 bg-blue-50" />
                                 </CardContent>
                             </Card>
                         ))}
@@ -338,25 +383,25 @@ export default function DashboardPage() {
                 ) : (
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {activities.slice(0, 4).map((activity) => (
-                            <Card key={activity.id} className="group overflow-hidden hover:shadow-lg transition-all">
-                                <div className="relative h-32 bg-muted">
+                            <Card key={activity.id} className="group overflow-hidden hover:shadow-2xl hover:shadow-blue-500/15 transition-all duration-500 border-blue-100/50 hover:-translate-y-1">
+                                <div className="relative h-36 bg-blue-50">
                                     {activity.image && (
-                                        <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-300" style={{ backgroundImage: `url(${activity.image})` }} />
+                                        <div className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700" style={{ backgroundImage: `url(${activity.image})` }} />
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                    <Badge className="absolute top-2 left-2 bg-white/90 text-foreground text-[10px]">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-blue-500/10" />
+                                    <Badge className="absolute top-2 left-2 bg-white/95 text-gray-700 text-[10px] border-0 shadow-md">
                                         {activity.category}
                                     </Badge>
                                 </div>
-                                <CardContent className="p-3">
-                                    <h4 className="font-semibold text-sm line-clamp-1 mb-1">{activity.name}</h4>
-                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <CardContent className="p-3 bg-gradient-to-r from-white to-blue-50/30">
+                                    <h4 className="font-semibold text-sm line-clamp-1 mb-1 text-gray-800">{activity.name}</h4>
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
                                         <span className="flex items-center gap-1">
-                                            <DollarSign className="h-3 w-3" />
+                                            <DollarSign className="h-3 w-3 text-emerald-500" />
                                             {activity.cost}
                                         </span>
                                         <span className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
+                                            <Clock className="h-3 w-3 text-blue-400" />
                                             {Math.floor(activity.duration / 60)}h
                                         </span>
                                     </div>

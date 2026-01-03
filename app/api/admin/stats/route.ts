@@ -1,74 +1,53 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { getTrips, mockCities, mockActivities, mockUsers } from '@/lib/mock-data'
 
 // GET /api/admin/stats - Get admin statistics
 export async function GET() {
     try {
+        const trips = getTrips()
+        
         // Get total counts
-        const [totalUsers, totalTrips, totalCities, totalActivities] = await Promise.all([
-            prisma.user.count(),
-            prisma.trip.count(),
-            prisma.city.count(),
-            prisma.activity.count(),
-        ])
+        const totalUsers = mockUsers.length
+        const totalTrips = trips.length
+        const totalCities = mockCities.length
+        const totalActivities = mockActivities.length
 
         // Get trips by status
-        const tripsByStatus = await prisma.trip.groupBy({
-            by: ['status'],
-            _count: true,
+        const tripsByStatus: Record<string, number> = {}
+        trips.forEach(trip => {
+            tripsByStatus[trip.status] = (tripsByStatus[trip.status] || 0) + 1
         })
 
         // Get recent trips
-        const recentTrips = await prisma.trip.findMany({
-            take: 5,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                user: {
-                    select: { name: true, email: true },
-                },
-                stops: {
-                    include: { city: true },
-                },
-            },
-        })
+        const recentTrips = trips.slice(0, 5).map(trip => ({
+            ...trip,
+            user: { name: mockUsers[0].name, email: mockUsers[0].email }
+        }))
 
-        // Get popular cities (by number of stops)
-        const popularCities = await prisma.city.findMany({
-            take: 5,
-            orderBy: { popularity: 'desc' },
-            include: {
-                _count: {
-                    select: { stops: true },
-                },
-            },
-        })
+        // Get popular cities
+        const popularCities = mockCities
+            .sort((a, b) => b.popularity - a.popularity)
+            .slice(0, 5)
+            .map(city => ({
+                ...city,
+                _count: { stops: Math.floor(Math.random() * 10) + 1 }
+            }))
 
         // Get top activities
-        const topActivities = await prisma.activity.findMany({
-            take: 5,
-            orderBy: { rating: 'desc' },
-            include: {
-                city: true,
-                _count: {
-                    select: { stopActivities: true },
-                },
-            },
-        })
+        const topActivities = mockActivities
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, 5)
+            .map(activity => ({
+                ...activity,
+                city: mockCities.find(c => c.id === activity.cityId) || { name: 'Unknown' },
+                _count: { stopActivities: Math.floor(Math.random() * 20) + 5 }
+            }))
 
         // Get users with most trips
-        const topUsers = await prisma.user.findMany({
-            take: 5,
-            include: {
-                _count: {
-                    select: { trips: true },
-                },
-            },
-            orderBy: {
-                trips: {
-                    _count: 'desc',
-                },
-            },
-        })
+        const topUsers = mockUsers.map(user => ({
+            ...user,
+            _count: { trips: trips.filter(t => t.userId === user.id).length }
+        }))
 
         // Monthly trip trends (mock data for demo)
         const monthlyTrends = [
@@ -87,10 +66,7 @@ export async function GET() {
                 totalCities,
                 totalActivities,
             },
-            tripsByStatus: tripsByStatus.reduce((acc, item) => {
-                acc[item.status] = item._count
-                return acc
-            }, {} as Record<string, number>),
+            tripsByStatus,
             recentTrips,
             popularCities,
             topActivities,

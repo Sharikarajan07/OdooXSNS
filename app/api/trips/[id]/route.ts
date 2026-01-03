@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { getTripById, updateTrip, deleteTrip, mockUsers } from '@/lib/mock-data'
 
 // GET /api/trips/[id] - Get a single trip
 export async function GET(
@@ -9,28 +9,7 @@ export async function GET(
     try {
         const { id } = await params
 
-        const trip = await prisma.trip.findUnique({
-            where: { id },
-            include: {
-                user: {
-                    select: { id: true, name: true, avatar: true },
-                },
-                stops: {
-                    include: {
-                        city: true,
-                        activities: {
-                            include: {
-                                activity: true,
-                                expenses: true,
-                            },
-                            orderBy: { orderIndex: 'asc' },
-                        },
-                    },
-                    orderBy: { orderIndex: 'asc' },
-                },
-                expenses: true,
-            },
-        })
+        const trip = getTripById(id)
 
         if (!trip) {
             return NextResponse.json(
@@ -39,7 +18,18 @@ export async function GET(
             )
         }
 
-        return NextResponse.json({ trip })
+        // Add user info
+        const user = mockUsers[0]
+        const tripWithUser = {
+            ...trip,
+            user: {
+                id: user.id,
+                name: user.name,
+                avatar: user.avatar
+            }
+        }
+
+        return NextResponse.json({ trip: tripWithUser })
     } catch (error) {
         console.error('Get trip error:', error)
         return NextResponse.json(
@@ -58,31 +48,23 @@ export async function PUT(
         const { id } = await params
         const data = await request.json()
 
-        const trip = await prisma.trip.update({
-            where: { id },
-            data: {
-                name: data.name,
-                description: data.description,
-                startDate: data.startDate ? new Date(data.startDate) : undefined,
-                endDate: data.endDate ? new Date(data.endDate) : undefined,
-                totalBudget: data.totalBudget,
-                coverImage: data.coverImage,
-                status: data.status,
-                isPublic: data.isPublic,
-            },
-            include: {
-                stops: {
-                    include: {
-                        city: true,
-                        activities: {
-                            include: {
-                                activity: true,
-                            },
-                        },
-                    },
-                },
-            },
+        const trip = updateTrip(id, {
+            name: data.name,
+            description: data.description,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            totalBudget: data.totalBudget,
+            coverImage: data.coverImage,
+            status: data.status,
+            isPublic: data.isPublic,
         })
+
+        if (!trip) {
+            return NextResponse.json(
+                { error: 'Trip not found' },
+                { status: 404 }
+            )
+        }
 
         return NextResponse.json({ trip })
     } catch (error) {
@@ -102,9 +84,14 @@ export async function DELETE(
     try {
         const { id } = await params
 
-        await prisma.trip.delete({
-            where: { id },
-        })
+        const success = deleteTrip(id)
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Trip not found' },
+                { status: 404 }
+            )
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

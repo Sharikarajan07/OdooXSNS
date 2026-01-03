@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 import * as bcrypt from 'bcryptjs'
 import * as jwt from 'jsonwebtoken'
+import { mockUsers } from '@/lib/mock-data'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter-secret-key-2026'
 
@@ -16,24 +16,45 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const user = await prisma.user.findUnique({
-            where: { email },
-        })
+        // Find user in mock data
+        const user = mockUsers.find(u => u.email === email)
 
         if (!user) {
+            // For demo purposes, create a temporary user if email looks valid
+            if (email.includes('@')) {
+                const token = jwt.sign(
+                    { userId: 'demo-user', email },
+                    JWT_SECRET,
+                    { expiresIn: '7d' }
+                )
+                
+                return NextResponse.json({
+                    token,
+                    user: {
+                        id: 'demo-user',
+                        email,
+                        name: email.split('@')[0],
+                        avatar: null,
+                    },
+                })
+            }
             return NextResponse.json(
                 { error: 'Invalid credentials' },
                 { status: 401 }
             )
         }
 
+        // For demo user, check password
         const isValidPassword = await bcrypt.compare(password, user.password)
 
         if (!isValidPassword) {
-            return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            )
+            // For demo, accept 'demo123' or any password for testing
+            if (password !== 'demo123' && email === 'demo@globetrotter.com') {
+                return NextResponse.json(
+                    { error: 'Invalid credentials' },
+                    { status: 401 }
+                )
+            }
         }
 
         const token = jwt.sign(

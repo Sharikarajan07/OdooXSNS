@@ -1,64 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { mockCities } from '@/lib/mock-data'
 
 // GET /api/cities - Get all cities with optional search
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
-        const query = searchParams.get('q')
+        const query = searchParams.get('q')?.toLowerCase()
         const region = searchParams.get('region')
         const country = searchParams.get('country')
         const sortBy = searchParams.get('sortBy') || 'popularity'
 
-        const where: Record<string, unknown> = {}
+        let cities = [...mockCities]
 
+        // Filter by query
         if (query) {
-            where.OR = [
-                { name: { contains: query } },
-                { country: { contains: query } },
-                { description: { contains: query } },
-            ]
+            cities = cities.filter(c =>
+                c.name.toLowerCase().includes(query) ||
+                c.country.toLowerCase().includes(query) ||
+                c.description.toLowerCase().includes(query)
+            )
         }
 
-        if (region) {
-            where.region = region
+        // Filter by region
+        if (region && region !== 'all') {
+            cities = cities.filter(c => c.region === region)
         }
 
+        // Filter by country
         if (country) {
-            where.country = country
+            cities = cities.filter(c => c.country === country)
         }
 
-        const orderBy: Record<string, string> = {}
+        // Sort
         if (sortBy === 'popularity') {
-            orderBy.popularity = 'desc'
+            cities.sort((a, b) => b.popularity - a.popularity)
         } else if (sortBy === 'costIndex') {
-            orderBy.costIndex = 'asc'
+            cities.sort((a, b) => a.costIndex - b.costIndex)
         } else if (sortBy === 'name') {
-            orderBy.name = 'asc'
+            cities.sort((a, b) => a.name.localeCompare(b.name))
         }
-
-        const cities = await prisma.city.findMany({
-            where,
-            orderBy,
-            include: {
-                activities: {
-                    take: 5,
-                },
-                _count: {
-                    select: { stops: true },
-                },
-            },
-        })
 
         // Get unique regions for filtering
-        const regions = await prisma.city.findMany({
-            select: { region: true },
-            distinct: ['region'],
-        })
+        const regions = [...new Set(mockCities.map(c => c.region))].filter(Boolean)
 
         return NextResponse.json({
             cities,
-            regions: regions.map(r => r.region).filter(Boolean),
+            regions,
         })
     } catch (error) {
         console.error('Get cities error:', error)

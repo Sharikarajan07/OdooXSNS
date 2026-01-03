@@ -50,7 +50,7 @@ import {
     AreaChart
 } from "recharts"
 
-const COLORS = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ec4899']
+const COLORS = ['#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#8b5cf6']
 
 interface AdminStats {
     stats: {
@@ -126,17 +126,17 @@ export default function AdminPage() {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto py-8 px-4">
+            <div className="container mx-auto py-8 px-4 bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/30 min-h-screen">
                 <div className="animate-pulse space-y-8">
-                    <div className="h-8 bg-muted rounded w-1/4" />
+                    <div className="h-8 bg-blue-100 rounded w-1/4" />
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-32 bg-muted rounded" />
+                            <div key={i} className="h-32 bg-blue-50 rounded" />
                         ))}
                     </div>
                     <div className="grid lg:grid-cols-2 gap-8">
-                        <div className="h-80 bg-muted rounded" />
-                        <div className="h-80 bg-muted rounded" />
+                        <div className="h-80 bg-blue-50 rounded" />
+                        <div className="h-80 bg-blue-50 rounded" />
                     </div>
                 </div>
             </div>
@@ -144,8 +144,8 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <Button variant="ghost" asChild className="mb-6">
+        <div className="container mx-auto py-8 px-4 bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/30 min-h-screen pb-24 md:pb-8">
+            <Button variant="ghost" asChild className="mb-6 hover:bg-blue-50 hover:text-blue-600">
                 <Link href="/dashboard">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Dashboard
@@ -155,10 +155,10 @@ export default function AdminPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                    <p className="text-muted-foreground">Monitor platform usage and analytics</p>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 bg-clip-text text-transparent">Admin Dashboard</h1>
+                    <p className="text-gray-500">Monitor platform usage and analytics</p>
                 </div>
-                <Badge variant="outline" className="w-fit">
+                <Badge className="w-fit bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0">
                     <Activity className="mr-2 h-4 w-4" />
                     Live Data
                 </Badge>
@@ -166,58 +166,58 @@ export default function AdminPage() {
 
             {/* Stats Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white shadow-xl shadow-blue-500/30">
                     <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-2">
+                        <CardDescription className="flex items-center gap-2 text-blue-100">
                             <Users className="h-4 w-4" />
                             Total Users
                         </CardDescription>
-                        <CardTitle className="text-3xl">{data?.stats.totalUsers || 0}</CardTitle>
+                        <CardTitle className="text-3xl text-white">{data?.stats.totalUsers || 0}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-green-600 flex items-center gap-1">
+                        <p className="text-sm text-blue-100 flex items-center gap-1">
                             <TrendingUp className="h-4 w-4" />
                             +12% this month
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+                <Card className="bg-gradient-to-br from-cyan-500 to-teal-500 border-0 text-white shadow-xl shadow-cyan-500/30">
                     <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-2">
+                        <CardDescription className="flex items-center gap-2 text-cyan-100">
                             <Map className="h-4 w-4" />
                             Total Trips
                         </CardDescription>
-                        <CardTitle className="text-3xl">{data?.stats.totalTrips || 0}</CardTitle>
+                        <CardTitle className="text-3xl text-white">{data?.stats.totalTrips || 0}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-green-600 flex items-center gap-1">
+                        <p className="text-sm text-cyan-100 flex items-center gap-1">
                             <TrendingUp className="h-4 w-4" />
                             +8% this month
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+                <Card className="bg-gradient-to-br from-emerald-500 to-teal-500 border-0 text-white shadow-xl shadow-emerald-500/30">
                     <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-2">
+                        <CardDescription className="flex items-center gap-2 text-emerald-100">
                             <Globe className="h-4 w-4" />
                             Cities
                         </CardDescription>
-                        <CardTitle className="text-3xl">{data?.stats.totalCities || 0}</CardTitle>
+                        <CardTitle className="text-3xl text-white">{data?.stats.totalCities || 0}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground">Available destinations</p>
+                        <p className="text-sm text-emerald-100">Available destinations</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+                <Card className="bg-gradient-to-br from-violet-500 to-purple-500 border-0 text-white shadow-xl shadow-violet-500/30">
                     <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-2">
+                        <CardDescription className="flex items-center gap-2 text-violet-100">
                             <Activity className="h-4 w-4" />
                             Activities
                         </CardDescription>
-                        <CardTitle className="text-3xl">{data?.stats.totalActivities || 0}</CardTitle>
+                        <CardTitle className="text-3xl text-white">{data?.stats.totalActivities || 0}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">Bookable experiences</p>
@@ -249,8 +249,8 @@ export default function AdminPage() {
                                         type="monotone"
                                         dataKey="trips"
                                         name="Trips"
-                                        stroke="#f97316"
-                                        fill="#f97316"
+                                        stroke="#06b6d4"
+                                        fill="#06b6d4"
                                         fillOpacity={0.3}
                                     />
                                     <Area

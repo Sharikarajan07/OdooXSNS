@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { getTripByShareCode, getTrips, addTrip, generateId, mockUsers, MockTrip } from '@/lib/mock-data'
 
 // GET /api/share/[code] - Get a shared trip by share code
 export async function GET(
@@ -9,32 +9,9 @@ export async function GET(
     try {
         const { code } = await params
 
-        const trip = await prisma.trip.findUnique({
-            where: { shareCode: code },
-            include: {
-                user: {
-                    select: { name: true, avatar: true },
-                },
-                stops: {
-                    include: {
-                        city: true,
-                        activities: {
-                            include: {
-                                activity: true,
-                            },
-                            orderBy: { orderIndex: 'asc' },
-                        },
-                    },
-                    orderBy: { orderIndex: 'asc' },
-                },
-                expenses: {
-                    select: {
-                        category: true,
-                        amount: true,
-                    },
-                },
-            },
-        })
+        // Find trip by share code
+        const allTrips = getTrips()
+        const trip = allTrips.find(t => t.shareCode === code)
 
         if (!trip) {
             return NextResponse.json(
@@ -43,15 +20,17 @@ export async function GET(
             )
         }
 
-        // Only return public trips or trips with a valid share code
-        if (!trip.isPublic && !trip.shareCode) {
-            return NextResponse.json(
-                { error: 'This trip is not shared' },
-                { status: 403 }
-            )
+        // Add user info
+        const user = mockUsers[0]
+        const tripWithUser = {
+            ...trip,
+            user: {
+                name: user.name,
+                avatar: user.avatar
+            }
         }
 
-        return NextResponse.json({ trip })
+        return NextResponse.json({ trip: tripWithUser })
     } catch (error) {
         console.error('Get shared trip error:', error)
         return NextResponse.json(
@@ -71,16 +50,8 @@ export async function POST(
         const { userId } = await request.json()
 
         // Find the original trip
-        const originalTrip = await prisma.trip.findUnique({
-            where: { shareCode: code },
-            include: {
-                stops: {
-                    include: {
-                        activities: true,
-                    },
-                },
-            },
-        })
+        const allTrips = getTrips()
+        const originalTrip = allTrips.find(t => t.shareCode === code)
 
         if (!originalTrip) {
             return NextResponse.json(
@@ -89,58 +60,25 @@ export async function POST(
             )
         }
 
-        // Get the target user (or demo user)
-        const targetUserId = userId || (await prisma.user.findFirst())?.id
-
-        if (!targetUserId) {
-            return NextResponse.json(
-                { error: 'User not found' },
-                { status: 401 }
-            )
-        }
-
         // Create a copy of the trip
-        const newTrip = await prisma.trip.create({
-            data: {
-                userId: targetUserId,
-                name: `${originalTrip.name} (Copy)`,
-                description: originalTrip.description,
-                coverImage: originalTrip.coverImage,
-                startDate: originalTrip.startDate,
-                endDate: originalTrip.endDate,
-                totalBudget: originalTrip.totalBudget,
-                status: 'draft',
-                shareCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
-            },
-        })
-
-        // Copy stops and activities
-        for (const stop of originalTrip.stops) {
-            const newStop = await prisma.stop.create({
-                data: {
-                    tripId: newTrip.id,
-                    cityId: stop.cityId,
-                    arrivalDate: stop.arrivalDate,
-                    departureDate: stop.departureDate,
-                    orderIndex: stop.orderIndex,
-                    notes: stop.notes,
-                },
-            })
-
-            // Copy stop activities
-            for (const activity of stop.activities) {
-                await prisma.stopActivity.create({
-                    data: {
-                        stopId: newStop.id,
-                        activityId: activity.activityId,
-                        startTime: activity.startTime,
-                        orderIndex: activity.orderIndex,
-                        customCost: activity.customCost,
-                        notes: activity.notes,
-                    },
-                })
-            }
+        const newTrip: MockTrip = {
+            ...originalTrip,
+            id: generateId(),
+            userId: userId || 'user-1',
+            name: `${originalTrip.name} (Copy)`,
+            status: 'draft',
+            shareCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
+            stops: originalTrip.stops.map(stop => ({
+                ...stop,
+                id: generateId(),
+                activities: stop.activities.map(act => ({
+                    ...act,
+                    id: generateId()
+                }))
+            }))
         }
+
+        addTrip(newTrip)
 
         return NextResponse.json({ trip: newTrip }, { status: 201 })
     } catch (error) {
