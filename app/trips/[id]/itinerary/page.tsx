@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { toast } from "sonner"
 import {
   ArrowLeft,
   Calendar,
@@ -20,7 +21,9 @@ import {
   CheckCircle2,
   Plane,
   ChevronRight,
-  Star
+  Star,
+  Check,
+  Copy
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -38,6 +41,7 @@ interface StopActivity {
   activity: Activity
   startTime?: string | null
   orderIndex: number
+  dayIndex?: number // Which day within the stop (0 = first day)
 }
 
 interface Stop {
@@ -62,6 +66,7 @@ interface Trip {
   endDate: string
   status: string
   totalBudget: number
+  shareCode?: string
   stops: Stop[]
 }
 
@@ -72,10 +77,20 @@ export default function ItineraryViewPage() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([0, 1, 2]))
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     fetchTrip()
   }, [tripId])
+
+  const copyShareLink = () => {
+    if (trip?.shareCode) {
+      const shareUrl = `${window.location.origin}/share/${trip.shareCode}`
+      navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   const fetchTrip = async () => {
     setIsLoading(true)
@@ -104,11 +119,11 @@ export default function ItineraryViewPage() {
               departureDate: "2026-06-20",
               orderIndex: 0,
               activities: [
-                { id: "a1", activity: { id: "act1", name: "Eiffel Tower Visit", cost: 28, category: "Culture", duration: 180 }, orderIndex: 0 },
-                { id: "a2", activity: { id: "act2", name: "Louvre Museum Tour", cost: 45, category: "Culture", duration: 240 }, orderIndex: 1 },
-                { id: "a3", activity: { id: "act3", name: "Seine River Cruise", cost: 35, category: "Relaxation", duration: 90 }, orderIndex: 2 },
-                { id: "a4", activity: { id: "act4", name: "Notre-Dame Cathedral", cost: 0, category: "Culture", duration: 60 }, orderIndex: 3 },
-                { id: "a5", activity: { id: "act5", name: "Montmartre Walking Tour", cost: 25, category: "Adventure", duration: 120 }, orderIndex: 4 },
+                { id: "a1", activity: { id: "act1", name: "Eiffel Tower Visit", cost: 28, category: "Culture", duration: 180 }, orderIndex: 0, dayIndex: 0 },
+                { id: "a2", activity: { id: "act2", name: "Louvre Museum Tour", cost: 45, category: "Culture", duration: 240 }, orderIndex: 1, dayIndex: 0 },
+                { id: "a3", activity: { id: "act3", name: "Seine River Cruise", cost: 35, category: "Relaxation", duration: 90 }, orderIndex: 0, dayIndex: 1 },
+                { id: "a4", activity: { id: "act4", name: "Notre-Dame Cathedral", cost: 0, category: "Culture", duration: 60 }, orderIndex: 1, dayIndex: 1 },
+                { id: "a5", activity: { id: "act5", name: "Montmartre Walking Tour", cost: 25, category: "Adventure", duration: 120 }, orderIndex: 0, dayIndex: 2 },
               ]
             },
             {
@@ -118,10 +133,10 @@ export default function ItineraryViewPage() {
               departureDate: "2026-06-25",
               orderIndex: 1,
               activities: [
-                { id: "b1", activity: { id: "bct1", name: "Colosseum Guided Tour", cost: 55, category: "Culture", duration: 180 }, orderIndex: 0 },
-                { id: "b2", activity: { id: "bct2", name: "Vatican Museums & Sistine Chapel", cost: 45, category: "Culture", duration: 300 }, orderIndex: 1 },
-                { id: "b3", activity: { id: "bct3", name: "Trevi Fountain & Spanish Steps", cost: 0, category: "Culture", duration: 90 }, orderIndex: 2 },
-                { id: "b4", activity: { id: "bct4", name: "Italian Cooking Class", cost: 85, category: "Food", duration: 180 }, orderIndex: 3 },
+                { id: "b1", activity: { id: "bct1", name: "Colosseum Guided Tour", cost: 55, category: "Culture", duration: 180 }, orderIndex: 0, dayIndex: 0 },
+                { id: "b2", activity: { id: "bct2", name: "Vatican Museums & Sistine Chapel", cost: 45, category: "Culture", duration: 300 }, orderIndex: 0, dayIndex: 1 },
+                { id: "b3", activity: { id: "bct3", name: "Trevi Fountain & Spanish Steps", cost: 0, category: "Culture", duration: 90 }, orderIndex: 0, dayIndex: 2 },
+                { id: "b4", activity: { id: "bct4", name: "Italian Cooking Class", cost: 85, category: "Food", duration: 180 }, orderIndex: 0, dayIndex: 3 },
               ]
             },
             {
@@ -131,10 +146,10 @@ export default function ItineraryViewPage() {
               departureDate: "2026-06-30",
               orderIndex: 2,
               activities: [
-                { id: "c1", activity: { id: "cct1", name: "Sagrada Familia Tour", cost: 40, category: "Culture", duration: 150 }, orderIndex: 0 },
-                { id: "c2", activity: { id: "cct2", name: "Park Güell Exploration", cost: 15, category: "Nature", duration: 120 }, orderIndex: 1 },
-                { id: "c3", activity: { id: "cct3", name: "Las Ramblas Food Tour", cost: 65, category: "Food", duration: 180 }, orderIndex: 2 },
-                { id: "c4", activity: { id: "cct4", name: "Beach Day at Barceloneta", cost: 0, category: "Relaxation", duration: 240 }, orderIndex: 3 },
+                { id: "c1", activity: { id: "cct1", name: "Sagrada Familia Tour", cost: 40, category: "Culture", duration: 150 }, orderIndex: 0, dayIndex: 0 },
+                { id: "c2", activity: { id: "cct2", name: "Park Güell Exploration", cost: 15, category: "Nature", duration: 120 }, orderIndex: 0, dayIndex: 1 },
+                { id: "c3", activity: { id: "cct3", name: "Las Ramblas Food Tour", cost: 65, category: "Food", duration: 180 }, orderIndex: 0, dayIndex: 2 },
+                { id: "c4", activity: { id: "cct4", name: "Beach Day at Barceloneta", cost: 0, category: "Relaxation", duration: 240 }, orderIndex: 0, dayIndex: 3 },
               ]
             }
           ]
@@ -156,35 +171,68 @@ export default function ItineraryViewPage() {
     setExpandedDays(newExpanded)
   }
 
+  // Helper to parse date string as local date (avoiding timezone issues)
+  const parseLocalDate = (dateStr: string): Date => {
+    // Handle both "2026-01-10" and Date objects
+    const str = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString()
+    const [year, month, day] = str.split('T')[0].split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+
+  // Helper to normalize date to YYYY-MM-DD string for comparison
+  const toDateString = (date: Date | string): string => {
+    if (typeof date === 'string') {
+      // If it's already a string like "2026-01-10", extract the date part
+      return date.split('T')[0]
+    }
+    const d = date
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   // Generate day-by-day itinerary
-  const generateDaySchedule = (): Array<{ date: Date; stop: Stop; dayNumber: number; isFirstDayAtStop: boolean; isLastDayAtStop: boolean }> => {
+  const generateDaySchedule = (): Array<{ date: Date; stop: Stop; dayNumber: number; isFirstDayAtStop: boolean; isLastDayAtStop: boolean; dayActivities: StopActivity[] }> => {
     if (!trip) return []
     
-    const schedule: Array<{ date: Date; stop: Stop; dayNumber: number; isFirstDayAtStop: boolean; isLastDayAtStop: boolean }> = []
-    const tripStart = new Date(trip.startDate)
-    const tripEnd = new Date(trip.endDate)
+    const schedule: Array<{ date: Date; stop: Stop; dayNumber: number; isFirstDayAtStop: boolean; isLastDayAtStop: boolean; dayActivities: StopActivity[] }> = []
+    const tripStart = parseLocalDate(trip.startDate)
+    const tripEnd = parseLocalDate(trip.endDate)
     let dayNumber = 1
     
-    for (let d = new Date(tripStart); d <= tripEnd; d.setDate(d.getDate() + 1)) {
-      const currentDate = new Date(d)
+    const currentDate = new Date(tripStart)
+    while (currentDate <= tripEnd) {
+      const currentDateStr = toDateString(currentDate)
+      
       const stop = trip.stops.find(s => {
-        const arrival = new Date(s.arrivalDate)
-        const departure = new Date(s.departureDate)
-        return currentDate >= arrival && currentDate <= departure
+        const arrivalStr = toDateString(s.arrivalDate)
+        const departureStr = toDateString(s.departureDate)
+        return currentDateStr >= arrivalStr && currentDateStr <= departureStr
       })
       
       if (stop) {
-        const arrival = new Date(stop.arrivalDate)
-        const departure = new Date(stop.departureDate)
+        const arrivalStr = toDateString(stop.arrivalDate)
+        const departureStr = toDateString(stop.departureDate)
+        
+        // Calculate which day within the stop this is (0-indexed)
+        const arrivalDate = parseLocalDate(arrivalStr)
+        const dayWithinStop = Math.round((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        // Filter activities for this specific day within the stop
+        const dayActivities = stop.activities.filter(act => {
+          const activityDayIndex = act.dayIndex ?? 0
+          return activityDayIndex === dayWithinStop
+        })
+        
         schedule.push({
-          date: currentDate,
+          date: new Date(currentDate),
           stop,
           dayNumber,
-          isFirstDayAtStop: currentDate.toDateString() === arrival.toDateString(),
-          isLastDayAtStop: currentDate.toDateString() === departure.toDateString()
+          isFirstDayAtStop: currentDateStr === arrivalStr,
+          isLastDayAtStop: currentDateStr === departureStr,
+          dayActivities
         })
       }
       dayNumber++
+      currentDate.setDate(currentDate.getDate() + 1)
     }
     
     return schedule
@@ -252,9 +300,17 @@ export default function ItineraryViewPage() {
                 Edit
               </Link>
             </Button>
-            <Button variant="secondary" size="sm" className="bg-white/90 hover:bg-white">
-              <Share2 className="mr-2 h-4 w-4" />
-              Share
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="bg-white/90 hover:bg-white"
+              onClick={() => {
+                copyShareLink()
+                toast.success("Share link copied to clipboard!")
+              }}
+            >
+              {copied ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Share2 className="mr-2 h-4 w-4" />}
+              {copied ? "Copied!" : "Share"}
             </Button>
           </div>
         </div>
@@ -392,9 +448,9 @@ export default function ItineraryViewPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right hidden sm:block">
-                        <p className="text-sm text-muted-foreground">{day.stop.activities.length} activities</p>
+                        <p className="text-sm text-muted-foreground">{day.dayActivities.length} activities</p>
                         <p className="font-semibold text-emerald-600">
-                          ${day.stop.activities.reduce((sum, a) => sum + a.activity.cost, 0)}
+                          ${day.dayActivities.reduce((sum, a) => sum + a.activity.cost, 0)}
                         </p>
                       </div>
                       <ChevronRight className={`h-5 w-5 text-muted-foreground transition-transform ${
@@ -407,9 +463,9 @@ export default function ItineraryViewPage() {
 
               {expandedDays.has(index) && (
                 <CardContent className="p-4">
-                  {day.stop.activities.length > 0 ? (
+                  {day.dayActivities.length > 0 ? (
                     <div className="space-y-3">
-                      {day.stop.activities.map((act, actIndex) => (
+                      {day.dayActivities.map((act, actIndex) => (
                         <div
                           key={act.id}
                           className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border border-blue-100 hover:shadow-md transition-shadow"
@@ -463,9 +519,16 @@ export default function ItineraryViewPage() {
               Edit Itinerary
             </Link>
           </Button>
-          <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share Trip
+          <Button 
+            variant="outline" 
+            className="border-blue-200 hover:bg-blue-50"
+            onClick={() => {
+              copyShareLink()
+              toast.success("Share link copied to clipboard!")
+            }}
+          >
+            {copied ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Share2 className="mr-2 h-4 w-4" />}
+            {copied ? "Link Copied!" : "Share Trip"}
           </Button>
           <Button variant="outline" className="border-blue-200 hover:bg-blue-50" asChild>
             <Link href={`/trips/${tripId}/budget`}>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,7 @@ export default function ProfilePage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Form states
     const [name, setName] = useState(user?.name || "John Traveler")
@@ -39,6 +40,35 @@ export default function ProfilePage() {
     const [language, setLanguage] = useState("en")
     const [notifications, setNotifications] = useState(true)
     const [publicProfile, setPublicProfile] = useState(false)
+    const [profileImage, setProfileImage] = useState<string | null>(user?.avatar || null)
+
+    // Handle image selection from device
+    const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file')
+                return
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size should be less than 5MB')
+                return
+            }
+            // Create a preview URL
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setProfileImage(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    // Trigger file input click
+    const handleCameraClick = () => {
+        fileInputRef.current?.click()
+    }
 
     // Saved destinations (mock data)
     const savedDestinations = [
@@ -89,13 +119,25 @@ export default function ProfilePage() {
                         {/* Avatar Section */}
                         <div className="flex items-center gap-6">
                             <div className="relative">
+                                {/* Hidden file input */}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImageSelect}
+                                    accept="image/*"
+                                    className="hidden"
+                                />
                                 <Avatar className="h-24 w-24 ring-4 ring-blue-200 ring-offset-2">
-                                    <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} />
+                                    <AvatarImage src={profileImage || "/placeholder-user.jpg"} />
                                     <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
                                         {name.split(' ').map(n => n[0]).join('')}
                                     </AvatarFallback>
                                 </Avatar>
-                                <button className="absolute bottom-0 right-0 p-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300">
+                                <button 
+                                    onClick={handleCameraClick}
+                                    className="absolute bottom-0 right-0 p-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+                                    title="Choose profile picture"
+                                >
                                     <Camera className="h-4 w-4" />
                                 </button>
                             </div>
@@ -103,6 +145,9 @@ export default function ProfilePage() {
                                 <h3 className="text-xl font-semibold text-gray-800">{name}</h3>
                                 <p className="text-gray-500">{email}</p>
                                 <p className="text-sm text-gray-400 mt-1">Member since January 2026</p>
+                                <p className="text-xs text-blue-500 mt-1 cursor-pointer hover:underline" onClick={handleCameraClick}>
+                                    Click camera icon to change photo
+                                </p>
                             </div>
                         </div>
 

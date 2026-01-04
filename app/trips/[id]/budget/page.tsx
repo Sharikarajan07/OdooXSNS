@@ -126,29 +126,55 @@ export default function BudgetPage() {
         setIsLoading(false)
     }
 
-    const handleAddExpense = () => {
+    const handleAddExpense = async () => {
         if (!newExpense.category || !newExpense.amount) {
             toast.error("Please fill in category and amount")
             return
         }
 
-        const expense: Expense = {
-            id: `exp-${Date.now()}`,
-            category: newExpense.category,
-            amount: parseFloat(newExpense.amount),
-            description: newExpense.description,
-            date: newExpense.date || new Date().toISOString().split('T')[0]
-        }
+        try {
+            const res = await fetch(`/api/trips/${tripId}/expenses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    category: newExpense.category,
+                    amount: parseFloat(newExpense.amount),
+                    description: newExpense.description,
+                })
+            })
 
-        setExpenses(prev => [...prev, expense])
-        setNewExpense({ category: "", amount: "", description: "", date: "" })
-        setIsAddExpenseOpen(false)
-        toast.success("Expense added successfully!")
+            const data = await res.json()
+            
+            if (data.expense) {
+                setExpenses(prev => [...prev, data.expense])
+                setNewExpense({ category: "", amount: "", description: "", date: "" })
+                setIsAddExpenseOpen(false)
+                toast.success("Expense added successfully!")
+            } else {
+                toast.error("Failed to add expense")
+            }
+        } catch (error) {
+            console.error('Error adding expense:', error)
+            toast.error("Failed to add expense")
+        }
     }
 
-    const handleDeleteExpense = (expenseId: string) => {
-        setExpenses(prev => prev.filter(e => e.id !== expenseId))
-        toast.success("Expense deleted")
+    const handleDeleteExpense = async (expenseId: string) => {
+        try {
+            const res = await fetch(`/api/trips/${tripId}/expenses?expenseId=${expenseId}`, {
+                method: 'DELETE'
+            })
+
+            if (res.ok) {
+                setExpenses(prev => prev.filter(e => e.id !== expenseId))
+                toast.success("Expense deleted")
+            } else {
+                toast.error("Failed to delete expense")
+            }
+        } catch (error) {
+            console.error('Error deleting expense:', error)
+            toast.error("Failed to delete expense")
+        }
     }
 
     // Calculate totals and breakdowns

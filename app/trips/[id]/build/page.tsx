@@ -80,6 +80,7 @@ interface TripActivity {
     activity: StopActivity
     startTime?: string
     orderIndex: number
+    dayIndex: number // Which day within the stop (0 = first day)
     notes?: string
 }
 
@@ -88,6 +89,13 @@ interface Trip {
     name: string
     startDate: string
     endDate: string
+}
+
+// Helper to parse date string as local date (avoiding timezone issues)
+const parseLocalDate = (dateStr: string): Date => {
+    const str = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString()
+    const [year, month, day] = str.split('T')[0].split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
 }
 
 export default function BuildItineraryPage() {
@@ -111,6 +119,7 @@ export default function BuildItineraryPage() {
     // Add activity dialog
     const [showAddActivity, setShowAddActivity] = useState(false)
     const [activeStopIndex, setActiveStopIndex] = useState<number | null>(null)
+    const [activeDayIndex, setActiveDayIndex] = useState<number>(0) // Which day within the stop to add activity to
     const [activitySearch, setActivitySearch] = useState("")
     const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
     const [isAddingActivity, setIsAddingActivity] = useState(false)
@@ -169,6 +178,80 @@ export default function BuildItineraryPage() {
                 startDate: tripData.trip?.startDate || new Date().toISOString(),
                 endDate: tripData.trip?.endDate || new Date().toISOString()
             })
+
+            // Load existing stops and map them to local state format
+            if (tripData.trip?.stops && tripData.trip.stops.length > 0) {
+                const existingStops: TripStop[] = tripData.trip.stops.map((stop: any, index: number) => {
+                    // Try to find matching travel stop, or create a placeholder
+                    const matchingTravelStop = travelStops.find(ts => 
+                        ts.name.toLowerCase() === stop.city?.name?.toLowerCase()
+                    )
+                    const matchingCountry = matchingTravelStop 
+                        ? countries.find(c => c.id === matchingTravelStop.countryId)
+                        : countries.find(c => c.name.toLowerCase() === stop.city?.country?.toLowerCase())
+
+                    // Create a travel stop representation from the existing data
+                    const travelStop: TravelStop = matchingTravelStop || {
+                        id: stop.cityId || `city-${stop.id}`,
+                        countryId: matchingCountry?.id || 'country-unknown',
+                        name: stop.city?.name || 'Unknown City',
+                        image: stop.city?.image || '/beautiful-travel-destination-landscape.jpg',
+                        description: stop.city?.description || '',
+                        costPerDay: stop.city?.costIndex || 50,
+                        bestTimeToVisit: 'Year-round',
+                        popularityRank: 1
+                    }
+
+                    const country: Country = matchingCountry || {
+                        id: 'country-unknown',
+                        name: stop.city?.country || 'Unknown',
+                        code: 'XX',
+                        image: '/beautiful-travel-destination-landscape.jpg',
+                        description: '',
+                        region: 'Unknown'
+                    }
+
+                    // Map existing activities
+                    const activities: TripActivity[] = (stop.activities || []).map((act: any, actIndex: number) => {
+                        const existingActivity: StopActivity = {
+                            id: act.activity?.id || act.activityId || `act-${act.id}`,
+                            stopId: stop.id,
+                            name: act.activity?.name || 'Unknown Activity',
+                            category: (act.activity?.category as StopActivity['category']) || 'Culture',
+                            description: act.activity?.description || '',
+                            image: act.activity?.image || '/beautiful-travel-destination-landscape.jpg',
+                            cost: act.activity?.cost || 0,
+                            duration: act.activity?.duration || 120,
+                            rating: act.activity?.rating || 4.5,
+                            isSuggested: false
+                        }
+
+                        return {
+                            id: act.id,
+                            stopActivityId: existingActivity.id,
+                            activity: existingActivity,
+                            startTime: act.startTime,
+                            orderIndex: act.orderIndex || actIndex,
+                            dayIndex: act.dayIndex ?? 0, // Default to first day if not set
+                            notes: act.notes
+                        }
+                    })
+
+                    return {
+                        id: stop.id,
+                        travelStopId: travelStop.id,
+                        travelStop,
+                        country,
+                        arrivalDate: stop.arrivalDate?.split('T')[0] || stop.arrivalDate,
+                        departureDate: stop.departureDate?.split('T')[0] || stop.departureDate,
+                        orderIndex: stop.orderIndex || index,
+                        notes: stop.notes,
+                        activities
+                    }
+                })
+
+                setTripStops(existingStops)
+            }
         } catch (error) {
             console.error('Error fetching data:', error)
             setTrip({
@@ -263,7 +346,8 @@ export default function BuildItineraryPage() {
                 id: `act-${Date.now()}`,
                 stopActivityId: customActivity.id,
                 activity: customActivity,
-                orderIndex: tripStops[activeStopIndex].activities.length,
+                orderIndex: tripStops[activeStopIndex].activities.filter(a => a.dayIndex === activeDayIndex).length,
+                dayIndex: activeDayIndex,
             }
         } else {
             const activity = stopActivities.find(a => a.id === selectedActivity)
@@ -277,7 +361,8 @@ export default function BuildItineraryPage() {
                 id: `act-${Date.now()}`,
                 stopActivityId: activity.id,
                 activity: activity,
-                orderIndex: tripStops[activeStopIndex].activities.length,
+                orderIndex: tripStops[activeStopIndex].activities.filter(a => a.dayIndex === activeDayIndex).length,
+                dayIndex: activeDayIndex,
             }
         }
 
@@ -288,6 +373,7 @@ export default function BuildItineraryPage() {
         setShowAddActivity(false)
         setSelectedActivity(null)
         setActiveStopIndex(null)
+        setActiveDayIndex(0)
         setActivitySearch("")
         setIsAddingActivity(false)
     }
@@ -316,14 +402,68 @@ export default function BuildItineraryPage() {
 
     const handleSave = async () => {
         setIsSaving(true)
-        await new Promise(resolve => setTimeout(resolve, 500))
+        try {
+            // First, clear existing stops from the trip to avoid duplicates
+            await fetch('/api/stops', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tripId,
+                    clearAll: true
+                })
+            })
+
+            // Save each stop and its activities
+            for (const stop of tripStops) {
+                // Create or update stop via API
+                const stopRes = await fetch('/api/stops', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tripId,
+                        cityId: stop.travelStopId,
+                        arrivalDate: stop.arrivalDate,
+                        departureDate: stop.departureDate,
+                        notes: stop.notes,
+                        // Include city data for creating new cities if needed
+                        cityName: stop.travelStop.name,
+                        cityCountry: stop.country.name,
+                        cityImage: stop.travelStop.image
+                    })
+                })
+                const stopData = await stopRes.json()
+                const savedStopId = stopData.stop?.id || stop.id
+
+                // Save activities for this stop
+                for (const activity of stop.activities) {
+                    await fetch('/api/stop-activities', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            stopId: savedStopId,
+                            activityId: activity.stopActivityId,
+                            startTime: activity.startTime,
+                            dayIndex: activity.dayIndex,
+                            notes: activity.notes,
+                            // Include activity data for creating new activities if needed
+                            activityName: activity.activity.name,
+                            activityCategory: activity.activity.category,
+                            activityCost: activity.activity.cost,
+                            activityDuration: activity.activity.duration
+                        })
+                    })
+                }
+            }
+        } catch (error) {
+            console.error('Error saving itinerary:', error)
+        }
         setIsSaving(false)
         router.push(`/trips/${tripId}`)
     }
 
     const totalCost = tripStops.reduce((sum, stop) =>
         sum + (stop.travelStop.costPerDay * Math.ceil(
-            (new Date(stop.departureDate).getTime() - new Date(stop.arrivalDate).getTime()) / (1000 * 60 * 60 * 24) + 1
+            (parseLocalDate(stop.departureDate).getTime() - parseLocalDate(stop.arrivalDate).getTime()) / (1000 * 60 * 60 * 24) + 1
         )) + stop.activities.reduce((actSum, act) => actSum + act.activity.cost, 0), 0
     )
 
@@ -490,12 +630,12 @@ export default function BuildItineraryPage() {
                                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4 pb-4 border-b">
                                             <span className="flex items-center gap-1">
                                                 <Calendar className="h-4 w-4 text-blue-500" />
-                                                {new Date(stop.arrivalDate).toLocaleDateString()} - {new Date(stop.departureDate).toLocaleDateString()}
+                                                {parseLocalDate(stop.arrivalDate).toLocaleDateString()} - {parseLocalDate(stop.departureDate).toLocaleDateString()}
                                             </span>
                                         </div>
 
-                                        {/* Activities */}
-                                        <div className="space-y-2 mb-4">
+                                        {/* Activities grouped by day */}
+                                        <div className="space-y-4 mb-4">
                                             <div className="flex items-center justify-between mb-2">
                                                 <h4 className="font-semibold text-sm">Activities</h4>
                                                 {stop.activities.length > 0 && (
@@ -505,66 +645,69 @@ export default function BuildItineraryPage() {
                                                 )}
                                             </div>
 
-                                            {stop.activities.map((act, actIndex) => (
-                                                <div
-                                                    key={act.id}
-                                                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-700/50 dark:to-gray-600/50 border group"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-5 w-5 opacity-50 hover:opacity-100"
-                                                                onClick={() => handleMoveActivity(stopIndex, actIndex, 'up')}
-                                                                disabled={actIndex === 0}
-                                                            >
-                                                                <ChevronUp className="h-3 w-3" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-5 w-5 opacity-50 hover:opacity-100"
-                                                                onClick={() => handleMoveActivity(stopIndex, actIndex, 'down')}
-                                                                disabled={actIndex === stop.activities.length - 1}
-                                                            >
-                                                                <ChevronDown className="h-3 w-3" />
-                                                            </Button>
-                                                        </div>
-
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-medium text-sm">
-                                                            {actIndex + 1}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium">{act.activity.name}</p>
-                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                                <Badge variant="secondary" className="text-xs">{act.activity.category}</Badge>
-                                                                <span className="flex items-center gap-1">
-                                                                    <Clock className="h-3 w-3" />
-                                                                    {Math.floor(act.activity.duration / 60)}h {act.activity.duration % 60}m
+                                            {(() => {
+                                                const arrivalDate = parseLocalDate(stop.arrivalDate)
+                                                const departureDate = parseLocalDate(stop.departureDate)
+                                                const numDays = Math.floor((departureDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                                                
+                                                return Array.from({ length: numDays }, (_, dayIdx) => {
+                                                    const dayDate = new Date(arrivalDate)
+                                                    dayDate.setDate(dayDate.getDate() + dayIdx)
+                                                    const dayActivities = stop.activities.filter(a => (a.dayIndex ?? 0) === dayIdx)
+                                                    
+                                                    return (
+                                                        <div key={dayIdx} className="border rounded-lg p-3 bg-gray-50/50 dark:bg-gray-800/50">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-xs font-medium text-blue-600">
+                                                                    Day {dayIdx + 1} - {dayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                                                 </span>
-                                                                {act.activity.rating >= 4.5 && (
-                                                                    <span className="flex items-center gap-1 text-amber-500">
-                                                                        <Star className="h-3 w-3 fill-current" />
-                                                                        {act.activity.rating}
-                                                                    </span>
-                                                                )}
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {dayActivities.length} activities
+                                                                </span>
                                                             </div>
+                                                            
+                                                            {dayActivities.length > 0 ? (
+                                                                <div className="space-y-2">
+                                                                    {dayActivities.map((act) => {
+                                                                        const actIndex = stop.activities.findIndex(a => a.id === act.id)
+                                                                        return (
+                                                                            <div
+                                                                                key={act.id}
+                                                                                className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-gray-700 border group"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-medium text-xs">
+                                                                                        {dayActivities.indexOf(act) + 1}
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p className="font-medium text-sm">{act.activity.name}</p>
+                                                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                                                            <Badge variant="secondary" className="text-xs">{act.activity.category}</Badge>
+                                                                                            <span>${act.activity.cost}</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="icon"
+                                                                                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                                    onClick={() => handleDeleteActivity(stopIndex, actIndex)}
+                                                                                >
+                                                                                    <X className="h-4 w-4" />
+                                                                                </Button>
+                                                                            </div>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-xs text-muted-foreground text-center py-2">
+                                                                    No activities for this day
+                                                                </p>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-green-600">${act.activity.cost}</span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                                            onClick={() => handleDeleteActivity(stopIndex, actIndex)}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                    )
+                                                })
+                                            })()}
 
                                             {stop.activities.length === 0 && (
                                                 <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
@@ -822,6 +965,50 @@ export default function BuildItineraryPage() {
                         </DialogHeader>
                         
                         <div className="flex-1 overflow-hidden py-4 space-y-4">
+                            {/* Day Selector */}
+                            {activeStop && (() => {
+                                const arrivalDate = parseLocalDate(activeStop.arrivalDate)
+                                const departureDate = parseLocalDate(activeStop.departureDate)
+                                const numDays = Math.floor((departureDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                                
+                                // Always show day selector
+                                return (
+                                    <div>
+                                        <Label className="text-sm font-medium mb-2 block">
+                                            Select Day 
+                                            <span className="text-muted-foreground ml-1">
+                                                (This stop: {arrivalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {departureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                                            </span>
+                                        </Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Array.from({ length: numDays }, (_, i) => {
+                                                const dayDate = new Date(arrivalDate)
+                                                dayDate.setDate(dayDate.getDate() + i)
+                                                return (
+                                                    <Button
+                                                        key={i}
+                                                        variant={activeDayIndex === i ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setActiveDayIndex(i)}
+                                                        className={activeDayIndex === i ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : ""}
+                                                    >
+                                                        Day {i + 1}
+                                                        <span className="ml-1 text-xs opacity-70">
+                                                            ({dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                                                        </span>
+                                                    </Button>
+                                                )
+                                            })}
+                                        </div>
+                                        {numDays === 1 && (
+                                            <p className="text-xs text-muted-foreground mt-2">
+                                                💡 To add activities on other days, extend this stop&apos;s dates or add another stop.
+                                            </p>
+                                        )}
+                                    </div>
+                                )
+                            })()}
+
                             {/* Show stop-specific suggestions OR generic suggestions if none available */}
                             {(suggestedActivities.length > 0 || genericSuggestions.length > 0) && (
                                 <div>

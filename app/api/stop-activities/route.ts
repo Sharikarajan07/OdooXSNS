@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTrips, getActivityById, addActivityToStop, generateId, MockStopActivity } from '@/lib/mock-data'
+import { getTrips, getActivityById, addActivityToStop, generateId, MockStopActivity, MockActivity, mockActivities } from '@/lib/mock-data'
 
 // GET /api/stop-activities - Get activities for a stop
 export async function GET(request: NextRequest) {
@@ -39,19 +39,43 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const data = await request.json()
-        const { stopId, activityId, startTime, notes } = data
+        const { stopId, activityId, startTime, dayIndex, notes, activityName, activityCategory, activityCost, activityDuration } = data
 
-        if (!stopId || !activityId) {
+        if (!stopId) {
             return NextResponse.json(
-                { error: 'Stop ID and activity ID are required' },
+                { error: 'Stop ID is required' },
                 { status: 400 }
             )
         }
 
-        const activity = getActivityById(activityId)
+        // Try to find existing activity, or create a dynamic one
+        let activity = getActivityById(activityId)
+        
+        if (!activity && activityName) {
+            // Check if activity with same name exists
+            activity = mockActivities.find(a => a.name.toLowerCase() === activityName.toLowerCase())
+            
+            if (!activity) {
+                // Create a new activity dynamically
+                activity = {
+                    id: activityId || generateId(),
+                    cityId: null,
+                    name: activityName,
+                    category: activityCategory || 'Culture',
+                    description: `Activity: ${activityName}`,
+                    image: '/beautiful-travel-destination-landscape.jpg',
+                    cost: activityCost || 0,
+                    duration: activityDuration || 120,
+                    rating: 4.5
+                }
+                // Add to mock activities for future reference
+                mockActivities.push(activity)
+            }
+        }
+
         if (!activity) {
             return NextResponse.json(
-                { error: 'Activity not found' },
+                { error: 'Activity not found and no activity data provided' },
                 { status: 404 }
             )
         }
@@ -59,13 +83,21 @@ export async function POST(request: NextRequest) {
         const stopActivity: MockStopActivity = {
             id: generateId(),
             stopId,
-            activityId,
+            activityId: activity.id,
             startTime: startTime || null,
             orderIndex: 0,
+            dayIndex: dayIndex ?? 0,
             activity
         }
 
-        addActivityToStop(stopId, stopActivity)
+        const result = addActivityToStop(stopId, stopActivity)
+        
+        if (!result) {
+            return NextResponse.json(
+                { error: 'Stop not found' },
+                { status: 404 }
+            )
+        }
 
         return NextResponse.json({ stopActivity }, { status: 201 })
     } catch (error) {

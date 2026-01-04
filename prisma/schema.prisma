@@ -97,6 +97,7 @@ model StopActivity {
   activityId    String
   startTime     DateTime?
   orderIndex    Int       @default(0)
+  dayIndex      Int       @default(0) // Which day within the stop (0 = first day)
   customCost    Float?
   notes         String?
   

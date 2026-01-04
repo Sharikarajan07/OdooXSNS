@@ -57,6 +57,7 @@ interface StopActivity {
   activity: Activity
   startTime?: string | null
   orderIndex: number
+  dayIndex?: number // Which day within the stop (0 = first day)
 }
 
 interface Stop {
@@ -142,34 +143,63 @@ export default function TripDetailsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Helper to parse date string as local date (avoiding timezone issues)
+  const parseLocalDate = (dateStr: string): Date => {
+    // Handle both "2026-01-10" and Date objects
+    const str = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString()
+    const [year, month, day] = str.split('T')[0].split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+
+  // Helper to normalize date to YYYY-MM-DD string for comparison
+  const toDateString = (date: Date | string): string => {
+    if (typeof date === 'string') {
+      // If it's already a string like "2026-01-10", extract the date part
+      return date.split('T')[0]
+    }
+    const d = date
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   // Generate day-wise schedule
   const getDaySchedule = (): DaySchedule[] => {
     if (!trip) return []
     
-    const startDate = new Date(trip.startDate)
-    const endDate = new Date(trip.endDate)
+    const startDate = parseLocalDate(trip.startDate)
+    const endDate = parseLocalDate(trip.endDate)
     const days: DaySchedule[] = []
     
     let currentDate = new Date(startDate)
     let dayNumber = 1
     
     while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split('T')[0]
+      const dateStr = toDateString(currentDate)
       const dayActivities: DaySchedule['activities'] = []
       
       // Find activities for this day based on stop dates
       trip.stops.forEach(stop => {
-        const arrivalDate = new Date(stop.arrivalDate)
-        const departureDate = new Date(stop.departureDate)
+        const arrivalDateStr = toDateString(stop.arrivalDate)
+        const departureDateStr = toDateString(stop.departureDate)
+        const currentDateStr = toDateString(currentDate)
         
-        if (currentDate >= arrivalDate && currentDate <= departureDate) {
+        // Check if current date falls within the stop period
+        if (currentDateStr >= arrivalDateStr && currentDateStr <= departureDateStr) {
+          // Calculate which day within the stop this is (0-indexed)
+          const arrivalDate = parseLocalDate(arrivalDateStr)
+          const dayWithinStop = Math.round((currentDate.getTime() - arrivalDate.getTime()) / (1000 * 60 * 60 * 24))
+          
+          // Only include activities that belong to this specific day
           stop.activities.forEach(act => {
-            dayActivities.push({
-              stopId: stop.id,
-              stopActivity: act,
-              city: stop.city.name,
-              country: stop.city.country
-            })
+            // If activity has a dayIndex, filter by it; otherwise show on first day only
+            const activityDayIndex = act.dayIndex ?? 0
+            if (activityDayIndex === dayWithinStop) {
+              dayActivities.push({
+                stopId: stop.id,
+                stopActivity: act,
+                city: stop.city.name,
+                country: stop.city.country
+              })
+            }
           })
         }
       })
@@ -778,13 +808,13 @@ export default function TripDetailsPage() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Duration</span>
                 <span className="font-semibold text-gray-800">
-                  {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                  {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Avg. per day</span>
                 <span className="font-semibold text-emerald-600">
-                  ${(totalCost / Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(0)}
+                  ${(totalCost / Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)).toFixed(0)}
                 </span>
               </div>
             </CardContent>

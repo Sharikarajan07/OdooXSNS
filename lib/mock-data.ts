@@ -71,6 +71,7 @@ export interface MockStopActivity {
   activityId: string
   startTime: string | null
   orderIndex: number
+  dayIndex: number // Which day within the stop (0 = first day)
   activity: MockActivity
 }
 
@@ -336,6 +337,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-3",
             startTime: "17:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[2]
           }
         ]
@@ -375,6 +377,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-4",
             startTime: "09:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[3]
           }
         ]
@@ -414,6 +417,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-7",
             startTime: "21:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[6]
           }
         ]
@@ -453,6 +457,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-1",
             startTime: "10:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[0]
           },
           {
@@ -461,6 +466,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-2",
             startTime: "14:00",
             orderIndex: 1,
+            dayIndex: 0,
             activity: mockActivities[1]
           }
         ]
@@ -500,6 +506,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-5",
             startTime: "04:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[4]
           },
           {
@@ -508,6 +515,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-6",
             startTime: "11:00",
             orderIndex: 1,
+            dayIndex: 1,
             activity: mockActivities[5]
           }
         ]
@@ -547,6 +555,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-8",
             startTime: "05:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[7]
           }
         ]
@@ -586,6 +595,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-9",
             startTime: "09:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[8]
           }
         ]
@@ -625,6 +635,7 @@ export const mockTrips: MockTrip[] = [
             activityId: "act-10",
             startTime: "12:00",
             orderIndex: 0,
+            dayIndex: 0,
             activity: mockActivities[9]
           }
         ]
@@ -642,10 +653,27 @@ export function generateId(): string {
   return Math.random().toString(36).substring(2, 15)
 }
 
-// In-memory store for runtime modifications
-let runtimeTrips = [...mockTrips]
-let runtimeStops: MockStop[] = []
-let runtimeStopActivities: MockStopActivity[] = []
+// Use global to persist data across HMR (Hot Module Replacement) in development
+declare global {
+  var __runtimeTrips: MockTrip[] | undefined
+  var __runtimeStops: MockStop[] | undefined
+  var __runtimeStopActivities: MockStopActivity[] | undefined
+}
+
+// In-memory store for runtime modifications - persists across HMR
+if (!global.__runtimeTrips) {
+  global.__runtimeTrips = [...mockTrips]
+}
+if (!global.__runtimeStops) {
+  global.__runtimeStops = []
+}
+if (!global.__runtimeStopActivities) {
+  global.__runtimeStopActivities = []
+}
+
+let runtimeTrips = global.__runtimeTrips
+let runtimeStops = global.__runtimeStops
+let runtimeStopActivities = global.__runtimeStopActivities
 
 export function getTrips() {
   return runtimeTrips
@@ -689,6 +717,16 @@ export function addStopToTrip(tripId: string, stop: MockStop) {
     return stop
   }
   return null
+}
+
+// Clear all stops from a trip (useful when rebuilding itinerary)
+export function clearTripStops(tripId: string) {
+  const trip = getTripById(tripId)
+  if (trip) {
+    trip.stops = []
+    return true
+  }
+  return false
 }
 
 export function addActivityToStop(stopId: string, activity: MockStopActivity) {

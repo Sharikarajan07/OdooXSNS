@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTripById, addStopToTrip, getCityById, generateId, MockStop } from '@/lib/mock-data'
+import { getTripById, addStopToTrip, getCityById, generateId, MockStop, MockCity, mockCities, clearTripStops } from '@/lib/mock-data'
 
 // GET /api/stops - Get stops for a trip
 export async function GET(request: NextRequest) {
@@ -31,21 +31,51 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const data = await request.json()
-        const { tripId, cityId, arrivalDate, departureDate, notes } = data
+        const { tripId, cityId, arrivalDate, departureDate, notes, cityName, cityCountry, cityImage } = data
 
-        if (!tripId || !cityId || !arrivalDate || !departureDate) {
+        if (!tripId || !arrivalDate || !departureDate) {
             return NextResponse.json(
-                { error: 'Trip ID, city ID, and dates are required' },
+                { error: 'Trip ID and dates are required' },
                 { status: 400 }
             )
         }
 
         const trip = getTripById(tripId)
-        const city = getCityById(cityId)
 
-        if (!trip || !city) {
+        if (!trip) {
             return NextResponse.json(
-                { error: 'Trip or city not found' },
+                { error: 'Trip not found' },
+                { status: 404 }
+            )
+        }
+
+        // Try to find existing city, or create a dynamic one
+        let city = getCityById(cityId)
+        
+        if (!city && cityName) {
+            // Check if city with same name exists
+            city = mockCities.find(c => c.name.toLowerCase() === cityName.toLowerCase())
+            
+            if (!city) {
+                // Create a new city dynamically
+                city = {
+                    id: cityId || generateId(),
+                    name: cityName,
+                    country: cityCountry || 'Unknown',
+                    region: 'Travel',
+                    image: cityImage || '/beautiful-travel-destination-landscape.jpg',
+                    description: `Beautiful destination in ${cityCountry || 'the world'}`,
+                    costIndex: 50,
+                    popularity: 50
+                }
+                // Add to mock cities for future reference
+                mockCities.push(city)
+            }
+        }
+
+        if (!city) {
+            return NextResponse.json(
+                { error: 'City not found and no city data provided' },
                 { status: 404 }
             )
         }
@@ -55,7 +85,7 @@ export async function POST(request: NextRequest) {
         const stop: MockStop = {
             id: generateId(),
             tripId,
-            cityId,
+            cityId: city.id,
             arrivalDate,
             departureDate,
             orderIndex,
@@ -76,12 +106,19 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// PUT /api/stops - Update stops order
+// PUT /api/stops - Update stops order or clear trip stops
 export async function PUT(request: NextRequest) {
     try {
-        const { stops } = await request.json()
+        const data = await request.json()
+        const { stops, tripId, clearAll } = data
 
-        // In mock mode, just return success
+        // If clearAll is true, remove all stops from the trip
+        if (clearAll && tripId) {
+            clearTripStops(tripId)
+            return NextResponse.json({ success: true, message: 'All stops cleared' })
+        }
+
+        // In mock mode, just return success for reordering
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Update stops error:', error)
